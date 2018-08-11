@@ -4,6 +4,11 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 {
     internal abstract class AbstractFile : IComparable<AbstractFile>
     {
+        internal string Path
+        {
+            get;
+            private protected set;
+        }
         internal abstract string Name
         {
             get;

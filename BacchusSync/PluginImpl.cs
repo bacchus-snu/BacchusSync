@@ -17,13 +17,12 @@ namespace pGina.Plugin.BacchusSync
         public string Version => Assembly.GetExecutingAssembly().GetName().Version.ToString();
         public Guid Uuid => UUID;
 
-        private readonly ILog logger;
         private readonly List<string> uploadTasks;
 
         public PluginImpl()
         {
-            logger = LogManager.GetLogger("pGina.Plugin.BacchusSync");
             uploadTasks = new List<string>();
+            Log.Instantiate();
         }
 
         public void Starting()
@@ -55,7 +54,8 @@ namespace pGina.Plugin.BacchusSync
             }
             catch (Exception e)
             {
-                logger.Error(e.Message);
+                Log.Error(e.Message);
+                Log.Error(e.StackTrace);
                 return new BooleanResult { Success = false, Message = e.Message };
             }
         }
@@ -78,7 +78,8 @@ namespace pGina.Plugin.BacchusSync
                 }
                 catch (Exception e)
                 {
-                    logger.Error(e.Message);
+                    Log.Error(e.Message);
+                    Log.Error(e.StackTrace);
                 }
                 finally
                 {

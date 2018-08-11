@@ -5,37 +5,35 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 {
     internal class LocalRegularFile : AbstractRegularFile
     {
-        private readonly string path;
-
         internal LocalRegularFile(string path)
         {
-            this.path = path;
+            Path = path;
         }
 
-        internal override DateTime LastWriteTime => File.GetLastWriteTime(path);
+        internal override DateTime LastWriteTime => File.GetLastWriteTime(Path);
 
-        internal override string Name => Path.GetFileName(path);
+        internal override string Name => System.IO.Path.GetFileName(Path);
 
-        internal override bool Exists => File.Exists(path);
+        internal override bool Exists => File.Exists(Path);
 
         internal override void Create()
         {
-            File.Create(path).Close();
+            File.Create(Path).Close();
         }
 
         internal override Stream OpenRead()
         {
-            return File.OpenRead(path);
+            return File.OpenRead(Path);
         }
 
         internal override Stream OpenWrite()
         {
-            return File.OpenWrite(path);
+            return File.OpenWrite(Path);
         }
 
         internal override void Remove()
         {
-            File.Delete(path);
+            File.Delete(Path);
         }
     }
 }

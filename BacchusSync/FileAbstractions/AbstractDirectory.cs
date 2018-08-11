@@ -22,6 +22,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
             {
                 throw new CopyTypeException("Destination type is not directory.");
             }
+            Log.DebugFormat("Copy directory {0} to {1}", Path, destination.Path);
 
             var destinationDirectory = destination as AbstractDirectory;
 

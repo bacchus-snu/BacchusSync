@@ -9,7 +9,6 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
     internal class RemoteDirectory : AbstractDirectory
     {
         private readonly SftpClient client;
-        private readonly string path;
 
         internal RemoteDirectory(SftpClient client, string path)
         {
@@ -18,23 +17,23 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
                 throw new InvalidCharacterException("Remote path contains reverse slash.");
             }
             this.client = client;
-            this.path = path;
+            Path = path;
         }
 
-        internal override string Name => path.Split('/').Last();
+        internal override string Name => Path.Split('/').Last();
 
-        internal override bool Exists => client.Exists(path);
+        internal override bool Exists => client.Exists(Path);
 
         internal override void Create()
         {
-            client.CreateDirectory(path);
+            client.CreateDirectory(Path);
         }
 
         internal override SortedSet<AbstractDirectory> GetDirectories()
         {
             var directories = new SortedSet<AbstractDirectory>();
 
-           foreach (var file in client.ListDirectoryAlmostAll(path))
+           foreach (var file in client.ListDirectoryAlmostAll(Path))
             {
                 if (file.IsDirectory)
                 {
@@ -48,7 +47,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
         internal override AbstractFile GetFile(string fileName)
         {
-            string targetPath = string.Format("{0}/{1}", path, fileName);
+            string targetPath = string.Format("{0}/{1}", Path, fileName);
             var file = new RemoteRegularFile(client, targetPath);
             return file;
         }
@@ -57,7 +56,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
         {
             var files = new SortedSet<AbstractRegularFile>();
 
-            foreach (var file in client.ListDirectoryAlmostAll(path))
+            foreach (var file in client.ListDirectoryAlmostAll(Path))
             {
                 if (file.IsRegularFile)
                 {
@@ -71,14 +70,14 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
         internal override AbstractDirectory GetSubDirectory(string directoryName)
         {
-            string targetPath = string.Format("{0}/{1}", path, directoryName);
+            string targetPath = string.Format("{0}/{1}", Path, directoryName);
             var directory = new RemoteDirectory(client, targetPath);
             return directory;
         }
 
         internal override void Remove()
         {
-            Remove(client.Get(path));
+            Remove(client.Get(Path));
         }
 
         private void Remove(SftpFile sftpFile)

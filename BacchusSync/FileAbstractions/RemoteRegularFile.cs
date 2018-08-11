@@ -9,7 +9,6 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
     internal class RemoteRegularFile : AbstractRegularFile
     {
         private readonly SftpClient client;
-        private readonly string path;
 
         internal RemoteRegularFile(SftpClient client, string path)
         {
@@ -18,33 +17,33 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
                 throw new InvalidCharacterException("Remote path contains reverse slash.");
             }
             this.client = client;
-            this.path = path;
+            Path = path;
         }
 
-        internal override DateTime LastWriteTime => client.GetLastWriteTime(path);
+        internal override DateTime LastWriteTime => client.GetLastWriteTime(Path);
 
-        internal override string Name => path.Split('/').Last();
+        internal override string Name => Path.Split('/').Last();
 
-        internal override bool Exists => client.Exists(path);
+        internal override bool Exists => client.Exists(Path);
 
         internal override void Create()
         {
-            client.Create(path);
+            client.Create(Path);
         }
 
         internal override Stream OpenRead()
         {
-            return client.OpenRead(path);
+            return client.OpenRead(Path);
         }
 
         internal override Stream OpenWrite()
         {
-            return client.OpenWrite(path);
+            return client.OpenWrite(Path);
         }
 
         internal override void Remove()
         {
-            client.Delete(path);
+            client.Delete(Path);
         }
     }
 }
