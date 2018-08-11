@@ -3,6 +3,7 @@ using pGina.Plugin.BacchusSync.Exceptions;
 using Renci.SshNet;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace pGina.Plugin.BacchusSync
 {
@@ -15,6 +16,7 @@ namespace pGina.Plugin.BacchusSync
         private readonly SftpClient client;
         private readonly string username;
         private readonly string serverBaseDirectory;
+        private readonly string[] uploadExclusionList;
         private readonly LocalDirectory localProfile;
         private readonly RemoteDirectory remoteProfile;
 
@@ -28,8 +30,18 @@ namespace pGina.Plugin.BacchusSync
             string localProfilePath = Environment.GetEnvironmentVariable("USERPROFILE");
             string remoteProfilePath = string.Format("{0}/{1}", serverBaseDirectory, username);
 
-            localProfile = new LocalDirectory(localProfilePath);
+            uploadExclusionList = CreateUploadExclusionList(localProfilePath);
+            localProfile = new LocalDirectory(localProfilePath, uploadExclusionList);
             remoteProfile = new RemoteDirectory(client, remoteProfilePath);
+        }
+
+        internal static string[] CreateUploadExclusionList(string localProfilePath)
+        {
+            return new string[]
+            {
+                Path.Combine(localProfilePath, "AppData", "Local"),
+                Path.Combine(localProfilePath, "AppData", "LocalLow"),
+            };
         }
 
         internal void UploadProfile()

@@ -1,15 +1,18 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace pGina.Plugin.BacchusSync.FileAbstractions
 {
     internal class LocalDirectory : AbstractDirectory
     {
         private readonly string path;
+        private readonly string[] exclusionList;
 
-        internal LocalDirectory(string path)
+        internal LocalDirectory(string path, string[] exclusionList)
         {
             this.path = path;
+            this.exclusionList = exclusionList;
         }
 
         internal override string Name => Path.GetFileName(path);
@@ -28,8 +31,11 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
             foreach (string directoryPath in Directory.GetDirectories(path))
             {
-                var directory = new LocalDirectory(directoryPath);
-                directories.Add(directory);
+                if (exclusionList == null || !exclusionList.Contains(directoryPath))
+                {
+                    var directory = new LocalDirectory(directoryPath, exclusionList);
+                    directories.Add(directory);
+                }
             }
 
             return directories;
@@ -57,7 +63,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
         internal override AbstractDirectory GetSubDirectory(string directoryName)
         {
             string targetPath = string.Format("{0}{1}{2}", path, Path.PathSeparator, directoryName);
-            return new LocalDirectory(targetPath);
+            return new LocalDirectory(targetPath, exclusionList);
         }
 
         internal override void Remove()
