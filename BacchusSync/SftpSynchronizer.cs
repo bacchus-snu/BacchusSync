@@ -20,14 +20,13 @@ namespace pGina.Plugin.BacchusSync
         private readonly LocalDirectory localProfile;
         private readonly RemoteDirectory remoteProfile;
 
-        internal SftpSynchronizer(string username, string password)
+        internal SftpSynchronizer(string username, string password, string localProfilePath)
         {
             client = new SftpClient(Settings.ServerAddress, Settings.ServerPort, username, password);
             client.Connect();
             this.username = username;
             serverBaseDirectory = Settings.ServerBaseDirectory;
 
-            string localProfilePath = Environment.GetEnvironmentVariable("USERPROFILE");
             string remoteProfilePath = string.Format("{0}/{1}", serverBaseDirectory, username);
 
             uploadExclusionList = CreateUploadExclusionList(localProfilePath);
