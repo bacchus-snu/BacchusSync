@@ -1,32 +1,40 @@
-﻿using pGina.Plugin.BacchusSync.Exceptions;
+﻿using pGina.Plugin.BacchusSync.FileAbstractions;
+using pGina.Plugin.BacchusSync.Exceptions;
 using Renci.SshNet;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace pGina.Plugin.BacchusSync
 {
     internal class SftpSynchronizer : IDisposable
     {
+        private delegate void SyncMethod<T>(T source, T destination) where T : AbstractFile;
+
         private const string SYNC_INFORMATION_DIRECTORY = ".sync";
 
         private readonly SftpClient client;
         private readonly string username;
-        private readonly string baseDirectory;
+        private readonly string serverBaseDirectory;
+        private readonly LocalDirectory localProfile;
+        private readonly RemoteDirectory remoteProfile;
 
         internal SftpSynchronizer(string username, string password)
         {
             client = new SftpClient(Settings.ServerAddress, Settings.ServerPort, username, password);
             this.username = username;
-            baseDirectory = Settings.ServerBaseDirectory;
+            serverBaseDirectory = Settings.ServerBaseDirectory;
+
+            string localProfilePath = Environment.GetEnvironmentVariable("USERPROFILE");
+            string remoteProfilePath = string.Format("{0}/{1}", serverBaseDirectory, username);
+
+            localProfile = new LocalDirectory(localProfilePath);
+            remoteProfile = new RemoteDirectory(client, remoteProfilePath);
         }
 
         internal void UploadProfile()
         {
             SaveSyncInformation(SyncInformation.SyncStatus.Uploading);
-            // TODO : Upload profile
+            SyncDirectory(localProfile, remoteProfile);
             SaveSyncInformation(SyncInformation.SyncStatus.LoggedOut);
         }
 
@@ -42,7 +50,7 @@ namespace pGina.Plugin.BacchusSync
                 case SyncInformation.SyncStatus.Uploading:
                     throw new UserNotLoggedOutException(syncInformation.LastHost);
                 case SyncInformation.SyncStatus.LoggedOut:
-                    // TODO : Download profile
+                    SyncDirectory(remoteProfile, localProfile);
                     break;
                 default:
                     throw new Exception("Unhandled status : " + syncInformation.Status.ToString());
@@ -51,8 +59,8 @@ namespace pGina.Plugin.BacchusSync
 
         internal SyncInformation GetSyncInformation()
         {
-            string syncInformationDirectoryPath = string.Format("{0}/{1}", baseDirectory, SYNC_INFORMATION_DIRECTORY);
-            string syncInformationPath = string.Format("{0}/{1}/{2}", baseDirectory, SYNC_INFORMATION_DIRECTORY, username);
+            string syncInformationDirectoryPath = string.Format("{0}/{1}", serverBaseDirectory, SYNC_INFORMATION_DIRECTORY);
+            string syncInformationPath = string.Format("{0}/{1}/{2}", serverBaseDirectory, SYNC_INFORMATION_DIRECTORY, username);
 
             if (!client.Exists(syncInformationDirectoryPath))
             {
@@ -60,7 +68,7 @@ namespace pGina.Plugin.BacchusSync
                 client.ChangePermissions(syncInformationDirectoryPath, 01777);
             }
 
-            if (client.Exists(string.Format("{0}/{1}/{2}", baseDirectory, SYNC_INFORMATION_DIRECTORY, username)))
+            if (client.Exists(string.Format("{0}/{1}/{2}", serverBaseDirectory, SYNC_INFORMATION_DIRECTORY, username)))
             {
                 using (var stream = client.OpenRead(syncInformationPath))
                 {
@@ -75,8 +83,8 @@ namespace pGina.Plugin.BacchusSync
 
         internal void SaveSyncInformation(SyncInformation.SyncStatus status)
         {
-            string syncInformationDirectoryPath = string.Format("{0}/{1}", baseDirectory, SYNC_INFORMATION_DIRECTORY);
-            string syncInformationPath = string.Format("{0}/{1}/{2}", baseDirectory, SYNC_INFORMATION_DIRECTORY, username);
+            string syncInformationDirectoryPath = string.Format("{0}/{1}", serverBaseDirectory, SYNC_INFORMATION_DIRECTORY);
+            string syncInformationPath = string.Format("{0}/{1}/{2}", serverBaseDirectory, SYNC_INFORMATION_DIRECTORY, username);
 
             if (!client.Exists(syncInformationDirectoryPath))
             {
@@ -88,6 +96,79 @@ namespace pGina.Plugin.BacchusSync
             {
                 var syncInformation = new SyncInformation(status, Environment.MachineName);
                 syncInformation.Save(stream);
+            }
+        }
+
+        private void SyncDirectory(AbstractDirectory source, AbstractDirectory destination)
+        {
+            var directoriesInSource = source.GetDirectories().GetEnumerator();
+            var directoriesInDestination = destination.GetDirectories().GetEnumerator();
+
+            Sync(directoriesInSource, directoriesInDestination, destination, SyncDirectory);
+
+            var regularFilesInSource = source.GetRegularFiles().GetEnumerator();
+            var regularFilesInDestination = destination.GetRegularFiles().GetEnumerator();
+
+            Sync(regularFilesInSource, regularFilesInDestination, destination, SyncRegularFile);
+        }
+
+        private void Sync<T>(IEnumerator<T> filesInSource, IEnumerator<T> filesInDestination, AbstractDirectory destination, SyncMethod<T> sync) where T : AbstractFile
+        {
+            bool moveSourceNext = true;
+            bool moveDestinationNext = true;
+
+            while (true)
+            {
+                if (moveSourceNext && !filesInSource.MoveNext())
+                {
+                    // Source reached end first. Remove remaining directories in destination.
+                    while (filesInDestination.MoveNext())
+                    {
+                        filesInDestination.Current.Remove();
+                    }
+                    break;
+                }
+                else if (moveDestinationNext && !filesInDestination.MoveNext())
+                {
+                    // Destination reached end first. Copy remaining directories in source to destination.
+                    while (filesInSource.MoveNext())
+                    {
+                        filesInSource.Current.CopyTo(destination);
+                    }
+                    break;
+                }
+                else
+                {
+                    T sourceCurrent = filesInSource.Current;
+                    T destinationCurrent = filesInDestination.Current;
+
+                    if (string.Compare(sourceCurrent.Name, destinationCurrent.Name) < 0)
+                    {
+                        sourceCurrent.CopyTo(destination);
+                        moveSourceNext = true;
+                        moveDestinationNext = false;
+                    }
+                    else if (string.Compare(sourceCurrent.Name, destinationCurrent.Name) > 0)
+                    {
+                        destinationCurrent.Remove();
+                        moveSourceNext = false;
+                        moveDestinationNext = true;
+                    }
+                    else
+                    {
+                        sync(sourceCurrent, destinationCurrent);
+                        moveSourceNext = true;
+                        moveDestinationNext = true;
+                    }
+                }
+            }
+        }
+
+        private void SyncRegularFile(AbstractRegularFile source, AbstractRegularFile destination)
+        {
+            if (source.LastWriteTime > destination.LastWriteTime)
+            {
+                source.Copy(destination);
             }
         }
 

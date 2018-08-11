@@ -55,8 +55,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FileAbstractions\Exceptions\CopyTypeException.cs" />
+    <Compile Include="FileAbstractions\Exceptions\InvalidCharacterException.cs" />
+    <Compile Include="FileAbstractions\AbstractDirectory.cs" />
+    <Compile Include="FileAbstractions\AbstractFile.cs" />
+    <Compile Include="FileAbstractions\AbstractRegularFile.cs" />
+    <Compile Include="FileAbstractions\LocalDirectory.cs" />
+    <Compile Include="FileAbstractions\LocalRegularFile.cs" />
+    <Compile Include="FileAbstractions\RemoteDirectory.cs" />
     <Compile Include="Exceptions\SyncFileFormatException.cs" />
     <Compile Include="Exceptions\UserNotLoggedOutException.cs" />
+    <Compile Include="FileAbstractions\RemoteRegularFile.cs" />
     <Compile Include="PluginImpl.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings.cs" />
