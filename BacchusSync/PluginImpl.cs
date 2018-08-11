@@ -8,7 +8,7 @@ using pGina.Shared.Types;
 
 namespace pGina.Plugin.BacchusSync
 {
-    public class PluginImpl : IPluginAuthenticationGateway, IPluginEventNotifications, IPluginLogoffRequestAddTime
+    public class PluginImpl : IPluginAuthenticationGateway, IPluginEventNotifications, IPluginLogoffRequestAddTime, IPluginConfiguration
     {
         internal static readonly Guid UUID = new Guid("a56d528b-c55e-4553-8a73-4a7aa2e3850c");
 
@@ -113,6 +113,12 @@ namespace pGina.Plugin.BacchusSync
             {
                 return uploadTasks.Contains(username.ToLower());
             }
+        }
+
+        public void Configure()
+        {
+            var configurationForm = new ConfigurationForm();
+            configurationForm.ShowDialog();
         }
     }
 }
