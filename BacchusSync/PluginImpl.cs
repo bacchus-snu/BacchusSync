@@ -64,7 +64,7 @@ namespace pGina.Plugin.BacchusSync
         {
             var userInformation = properties.GetTrackedSingle<UserInformation>();
 
-            if (evnt == SessionChangeReason.SessionLogoff)
+            if (evnt == SessionChangeReason.SessionUnlock)
             {
                 try
                 {
