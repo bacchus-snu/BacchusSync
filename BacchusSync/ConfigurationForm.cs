@@ -24,7 +24,7 @@ namespace pGina.Plugin.BacchusSync
 
         private void OnClickOkButton(object sender, EventArgs e)
         {
-            if (!int.TryParse(serverPortText.Text, out int port) || port > ushort.MaxValue || port <= 0)
+            if (!ushort.TryParse(serverPortText.Text, out ushort port))
             {
                 MessageBox.Show("Invalid server port", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;

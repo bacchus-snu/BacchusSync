@@ -21,6 +21,7 @@ namespace pGina.Plugin.BacchusSync
         internal SftpSynchronizer(string username, string password)
         {
             client = new SftpClient(Settings.ServerAddress, Settings.ServerPort, username, password);
+            client.Connect();
             this.username = username;
             serverBaseDirectory = Settings.ServerBaseDirectory;
 
@@ -101,15 +102,22 @@ namespace pGina.Plugin.BacchusSync
 
         private void SyncDirectory(AbstractDirectory source, AbstractDirectory destination)
         {
-            var directoriesInSource = source.GetDirectories().GetEnumerator();
-            var directoriesInDestination = destination.GetDirectories().GetEnumerator();
+            if (destination.Exists)
+            {
+                var directoriesInSource = source.GetDirectories().GetEnumerator();
+                var directoriesInDestination = destination.GetDirectories().GetEnumerator();
 
-            Sync(directoriesInSource, directoriesInDestination, destination, SyncDirectory);
+                Sync(directoriesInSource, directoriesInDestination, destination, SyncDirectory);
 
-            var regularFilesInSource = source.GetRegularFiles().GetEnumerator();
-            var regularFilesInDestination = destination.GetRegularFiles().GetEnumerator();
+                var regularFilesInSource = source.GetRegularFiles().GetEnumerator();
+                var regularFilesInDestination = destination.GetRegularFiles().GetEnumerator();
 
-            Sync(regularFilesInSource, regularFilesInDestination, destination, SyncRegularFile);
+                Sync(regularFilesInSource, regularFilesInDestination, destination, SyncRegularFile);
+            }
+            else
+            {
+                source.Copy(destination);
+            }
         }
 
         private void Sync<T>(IEnumerator<T> filesInSource, IEnumerator<T> filesInDestination, AbstractDirectory destination, SyncMethod<T> sync) where T : AbstractFile

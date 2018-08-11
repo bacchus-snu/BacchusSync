@@ -34,7 +34,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
         {
             var directories = new SortedSet<AbstractDirectory>();
 
-           foreach (var file in client.ListDirectory(path))
+           foreach (var file in client.ListDirectoryAlmostAll(path))
             {
                 if (file.IsDirectory)
                 {
@@ -57,7 +57,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
         {
             var files = new SortedSet<AbstractRegularFile>();
 
-            foreach (var file in client.ListDirectory(path))
+            foreach (var file in client.ListDirectoryAlmostAll(path))
             {
                 if (file.IsRegularFile)
                 {
@@ -85,7 +85,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
         {
             if (sftpFile.IsDirectory)
             {
-                foreach (var file in client.ListDirectory(sftpFile.FullName))
+                foreach (var file in client.ListDirectoryAlmostAll(sftpFile.FullName))
                 {
                     Remove(file);
                 }

@@ -25,10 +25,10 @@ namespace pGina.Plugin.BacchusSync
             set => settings.SetSetting(KEY_SERVER_ADDRESS, value);
         }
 
-        internal static int ServerPort
+        internal static ushort ServerPort
         {
-            get => (int) settings.GetSetting(KEY_SERVER_PORT).RawValue;
-            set => settings.SetSetting(KEY_SERVER_PORT, value);
+            get => ushort.Parse(settings.GetSetting(KEY_SERVER_PORT).RawValue as string);
+            set => settings.SetSetting(KEY_SERVER_PORT, value.ToString());
         }
 
         internal static string ServerFingerprint
