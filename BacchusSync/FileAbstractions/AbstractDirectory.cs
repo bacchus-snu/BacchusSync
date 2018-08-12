@@ -18,11 +18,16 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
         internal override void Copy(AbstractFile destination)
         {
+            Copy(destination, true);
+        }
+
+        internal virtual void Copy(AbstractFile destination, bool ignoreErrors)
+        {
+            Log.DebugFormat("Copy directory {0} to {1}", Path, destination.Path);
             if (!(destination is AbstractDirectory))
             {
                 throw new CopyTypeException("Destination type is not directory.");
             }
-            Log.DebugFormat("Copy directory {0} to {1}", Path, destination.Path);
 
             var destinationDirectory = destination as AbstractDirectory;
 
@@ -33,14 +38,36 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
             foreach (var directory in GetDirectories())
             {
-                var targetDirectory = destinationDirectory.GetSubDirectory(directory.Name);
-                directory.Copy(targetDirectory);
+                try
+                {
+                    var targetDirectory = destinationDirectory.GetSubDirectory(directory.Name);
+                    directory.Copy(targetDirectory);
+                }
+                catch (AccessDeniedException e)
+                {
+                    Log.Warn(e.Message);
+                    if (!ignoreErrors)
+                    {
+                        throw e;
+                    }
+                }
             }
 
             foreach (var file in GetRegularFiles())
             {
-                var targetFile = destinationDirectory.GetFile(file.Name);
-                file.Copy(targetFile);
+                try
+                {
+                    var targetFile = destinationDirectory.GetFile(file.Name);
+                    file.Copy(targetFile);
+                }
+                catch (AccessDeniedException e)
+                {
+                    Log.Warn(e.Message);
+                    if (!ignoreErrors)
+                    {
+                        throw e;
+                    }
+                }
             }
         }
     }

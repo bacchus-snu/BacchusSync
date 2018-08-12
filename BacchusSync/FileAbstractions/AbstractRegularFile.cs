@@ -23,11 +23,11 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
         internal override void Copy(AbstractFile destination)
         {
+            Log.DebugFormat("Copy file {0} to {1}", Path, destination.Path);
             if (!(destination is AbstractRegularFile))
             {
                 throw new CopyTypeException("Destination type is not regular file.");
             }
-            Log.DebugFormat("Copy file {0} to {1}", Path, destination.Path);
 
             var destinationRegularFile = destination as AbstractRegularFile;
 

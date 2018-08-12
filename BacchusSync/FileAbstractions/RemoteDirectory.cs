@@ -1,5 +1,6 @@
 ﻿using pGina.Plugin.BacchusSync.FileAbstractions.Exceptions;
 using Renci.SshNet;
+using Renci.SshNet.Common;
 using Renci.SshNet.Sftp;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,18 +32,25 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
         internal override SortedSet<AbstractDirectory> GetDirectories()
         {
-            var directories = new SortedSet<AbstractDirectory>();
-
-           foreach (var file in client.ListDirectoryAlmostAll(Path))
+            try
             {
-                if (file.IsDirectory)
-                {
-                    var directory = new RemoteDirectory(client, file.FullName);
-                    directories.Add(directory);
-                }
-            }
+                var directories = new SortedSet<AbstractDirectory>();
 
-            return directories;
+                foreach (var file in client.ListDirectoryAlmostAll(Path))
+                {
+                    if (file.IsDirectory)
+                    {
+                        var directory = new RemoteDirectory(client, file.FullName);
+                        directories.Add(directory);
+                    }
+                }
+
+                return directories;
+            }
+            catch (SftpPermissionDeniedException e)
+            {
+                throw new AccessDeniedException(Path, e);
+            }
         }
 
         internal override AbstractFile GetFile(string fileName)
@@ -54,18 +62,25 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
         internal override SortedSet<AbstractRegularFile> GetRegularFiles()
         {
-            var files = new SortedSet<AbstractRegularFile>();
-
-            foreach (var file in client.ListDirectoryAlmostAll(Path))
+            try
             {
-                if (file.IsRegularFile)
-                {
-                    var regularFile = new RemoteRegularFile(client, file.FullName);
-                    files.Add(regularFile);
-                }
-            }
+                var files = new SortedSet<AbstractRegularFile>();
 
-            return files;
+                foreach (var file in client.ListDirectoryAlmostAll(Path))
+                {
+                    if (file.IsRegularFile)
+                    {
+                        var regularFile = new RemoteRegularFile(client, file.FullName);
+                        files.Add(regularFile);
+                    }
+                }
+
+                return files;
+            }
+            catch (SftpPermissionDeniedException e)
+            {
+                throw new AccessDeniedException(Path, e);
+            }
         }
 
         internal override AbstractDirectory GetSubDirectory(string directoryName)
@@ -82,14 +97,21 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
         private void Remove(SftpFile sftpFile)
         {
-            if (sftpFile.IsDirectory)
+            try
             {
-                foreach (var file in client.ListDirectoryAlmostAll(sftpFile.FullName))
+                if (sftpFile.IsDirectory)
                 {
-                    Remove(file);
+                    foreach (var file in client.ListDirectoryAlmostAll(sftpFile.FullName))
+                    {
+                        Remove(file);
+                    }
                 }
+                sftpFile.Delete();
             }
-            sftpFile.Delete();
+            catch (SftpPermissionDeniedException e)
+            {
+                throw new AccessDeniedException(Path, e);
+            }
         }
     }
 }

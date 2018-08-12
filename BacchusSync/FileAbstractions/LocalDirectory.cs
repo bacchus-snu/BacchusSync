@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using pGina.Plugin.BacchusSync.FileAbstractions.Exceptions;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -26,18 +28,25 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
         internal override SortedSet<AbstractDirectory> GetDirectories()
         {
-            var directories = new SortedSet<AbstractDirectory>();
-
-            foreach (string directoryPath in Directory.GetDirectories(Path))
+            try
             {
-                if (exclusionList == null || !exclusionList.Contains(directoryPath))
-                {
-                    var directory = new LocalDirectory(directoryPath, exclusionList);
-                    directories.Add(directory);
-                }
-            }
+                var directories = new SortedSet<AbstractDirectory>();
 
-            return directories;
+                foreach (string directoryPath in Directory.GetDirectories(Path))
+                {
+                    if (exclusionList == null || !exclusionList.Contains(directoryPath))
+                    {
+                        var directory = new LocalDirectory(directoryPath, exclusionList);
+                        directories.Add(directory);
+                    }
+                }
+
+                return directories;
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                throw new AccessDeniedException(Path, e);
+            }
         }
 
         internal override AbstractFile GetFile(string fileName)
@@ -48,15 +57,22 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
         internal override SortedSet<AbstractRegularFile> GetRegularFiles()
         {
-            var regularFiles = new SortedSet<AbstractRegularFile>();
-
-            foreach (string filePath in Directory.GetFiles(Path))
+            try
             {
-                var file = new LocalRegularFile(filePath);
-                regularFiles.Add(file);
-            }
+                var regularFiles = new SortedSet<AbstractRegularFile>();
 
-            return regularFiles;
+                foreach (string filePath in Directory.GetFiles(Path))
+                {
+                    var file = new LocalRegularFile(filePath);
+                    regularFiles.Add(file);
+                }
+
+                return regularFiles;
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                throw new AccessDeniedException(Path, e);
+            }
         }
 
         internal override AbstractDirectory GetSubDirectory(string directoryName)

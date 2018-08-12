@@ -1,4 +1,5 @@
-﻿using System;
+﻿using pGina.Plugin.BacchusSync.FileAbstractions.Exceptions;
+using System;
 using System.IO;
 
 namespace pGina.Plugin.BacchusSync.FileAbstractions
@@ -18,22 +19,50 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
         internal override void Create()
         {
-            File.Create(Path).Close();
+            try
+            {
+                File.Create(Path).Close();
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                throw new AccessDeniedException(Path, e);
+            }
         }
 
         internal override Stream OpenRead()
         {
-            return File.OpenRead(Path);
+            try
+            {
+                return File.OpenRead(Path);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                throw new AccessDeniedException(Path, e);
+            }
         }
 
         internal override Stream OpenWrite()
         {
-            return File.OpenWrite(Path);
+            try
+            {
+                return File.OpenWrite(Path);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                throw new AccessDeniedException(Path, e);
+            }
         }
 
         internal override void Remove()
         {
-            File.Delete(Path);
+            try
+            {
+                File.Delete(Path);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                throw new AccessDeniedException(Path, e);
+            }
         }
     }
 }
