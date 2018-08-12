@@ -47,8 +47,10 @@ namespace pGina.Plugin.BacchusSync
 
                 if (!uploadProgressing)
                 {
-                    var synchronizer = new SftpSynchronizer(userInformation.Username, userInformation.Password);
-                    synchronizer.DownloadProfile();
+                    using (var synchronizer = new SftpSynchronizer(userInformation.Username, userInformation.Password))
+                    {
+                        synchronizer.DownloadProfile();
+                    }
                 }
                 return new BooleanResult { Success = true };
             }
@@ -73,8 +75,10 @@ namespace pGina.Plugin.BacchusSync
                         uploadTasks.Add(userInformation.Username.ToLower());
                     }
 
-                    var synchronizer = new SftpSynchronizer(userInformation.Username, userInformation.Password);
-                    synchronizer.UploadProfile();
+                    using (var synchronizer = new SftpSynchronizer(userInformation.Username, userInformation.Password))
+                    {
+                        synchronizer.UploadProfile();
+                    }
                 }
                 catch (Exception e)
                 {

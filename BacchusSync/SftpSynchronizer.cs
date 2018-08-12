@@ -163,7 +163,7 @@ namespace pGina.Plugin.BacchusSync
             {
                 if (moveSourceNext && !filesInSource.MoveNext())
                 {
-                    // Source reached end first. Remove remaining directories in destination.
+                    // Source reached end first. Remove remaining files in destination.
                     while (filesInDestination.MoveNext())
                     {
                         filesInDestination.Current.Remove();
@@ -172,7 +172,7 @@ namespace pGina.Plugin.BacchusSync
                 }
                 else if (moveDestinationNext && !filesInDestination.MoveNext())
                 {
-                    // Destination reached end first. Copy remaining directories in source to destination.
+                    // Destination reached end first. Copy remaining files in source to destination.
                     while (filesInSource.MoveNext())
                     {
                         filesInSource.Current.CopyTo(destination);
