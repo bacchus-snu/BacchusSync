@@ -65,6 +65,7 @@
     <Compile Include="ConfigurationForm.Designer.cs">
       <DependentUpon>ConfigurationForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileAbstractions\Exceptions\CannotGetUserProfilePathException.cs" />
     <Compile Include="FileAbstractions\Exceptions\CopyTypeException.cs" />
     <Compile Include="FileAbstractions\Exceptions\InvalidCharacterException.cs" />
     <Compile Include="FileAbstractions\AbstractDirectory.cs" />

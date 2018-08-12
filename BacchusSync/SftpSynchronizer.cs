@@ -4,6 +4,7 @@ using Renci.SshNet;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using pGina.Plugin.BacchusSync.FileAbstractions.Exceptions;
 
 namespace pGina.Plugin.BacchusSync
 {
@@ -20,18 +21,39 @@ namespace pGina.Plugin.BacchusSync
         private readonly LocalDirectory localProfile;
         private readonly RemoteDirectory remoteProfile;
 
-        internal SftpSynchronizer(string username, string password, string localProfilePath)
+        internal SftpSynchronizer(string username, string password)
         {
             client = new SftpClient(Settings.ServerAddress, Settings.ServerPort, username, password);
             client.Connect();
             this.username = username;
             serverBaseDirectory = Settings.ServerBaseDirectory;
 
+            string localProfilePath = GetLocalProfilePath(username, password);
             string remoteProfilePath = string.Format("{0}/{1}", serverBaseDirectory, username);
 
             uploadExclusionList = CreateUploadExclusionList(localProfilePath);
             localProfile = new LocalDirectory(localProfilePath, uploadExclusionList);
             remoteProfile = new RemoteDirectory(client, remoteProfilePath);
+        }
+
+        internal static string GetLocalProfilePath(string username, string password)
+        {
+            IntPtr hToken = Abstractions.WindowsApi.pInvokes.GetUserToken(username, null, password);
+            if (hToken != IntPtr.Zero)
+            {
+                string path = Abstractions.WindowsApi.pInvokes.GetUserProfilePath(hToken);
+                if (string.IsNullOrEmpty(path))
+                {
+                    path = Abstractions.WindowsApi.pInvokes.GetUserProfileDir(hToken);
+                }
+                Abstractions.WindowsApi.pInvokes.CloseHandle(hToken);
+
+                return path;
+            }
+            else
+            {
+                throw new CannotGetUserProfilePathException(username);
+            }
         }
 
         internal static string[] CreateUploadExclusionList(string localProfilePath)
