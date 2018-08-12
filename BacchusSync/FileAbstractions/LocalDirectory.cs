@@ -36,8 +36,11 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
                 {
                     if (exclusionList == null || !exclusionList.Contains(directoryPath))
                     {
-                        var directory = new LocalDirectory(directoryPath, exclusionList);
-                        directories.Add(directory);
+                        if (!(new DirectoryInfo(directoryPath)).IsReparsePoint())
+                        {
+                            var directory = new LocalDirectory(directoryPath, exclusionList);
+                            directories.Add(directory);
+                        }
                     }
                 }
 
@@ -63,8 +66,11 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
                 foreach (string filePath in Directory.GetFiles(Path))
                 {
-                    var file = new LocalRegularFile(filePath);
-                    regularFiles.Add(file);
+                    if (!(new FileInfo(filePath)).IsReparsePoint())
+                    {
+                        var file = new LocalRegularFile(filePath);
+                        regularFiles.Add(file);
+                    }
                 }
 
                 return regularFiles;
