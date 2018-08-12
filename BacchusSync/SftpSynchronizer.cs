@@ -173,10 +173,12 @@ namespace pGina.Plugin.BacchusSync
                 else if (moveDestinationNext && !filesInDestination.MoveNext())
                 {
                     // Destination reached end first. Copy remaining files in source to destination.
-                    while (filesInSource.MoveNext())
+                    // Note that filesInSource already did MoveNext().
+                    do
                     {
                         filesInSource.Current.CopyTo(destination);
                     }
+                    while (filesInSource.MoveNext());
                     break;
                 }
                 else
