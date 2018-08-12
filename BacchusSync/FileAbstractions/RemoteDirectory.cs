@@ -97,6 +97,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
         private void Remove(SftpFile sftpFile)
         {
+            Log.DebugFormat("Removing {0}", Path);
             try
             {
                 if (sftpFile.IsDirectory)

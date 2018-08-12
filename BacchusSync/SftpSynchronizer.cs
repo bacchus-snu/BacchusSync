@@ -62,6 +62,7 @@ namespace pGina.Plugin.BacchusSync
             {
                 Path.Combine(localProfilePath, "AppData", "Local"),
                 Path.Combine(localProfilePath, "AppData", "LocalLow"),
+                Path.Combine(localProfilePath, "Searches"),
             };
         }
 
@@ -207,7 +208,7 @@ namespace pGina.Plugin.BacchusSync
 
         private void SyncRegularFile(AbstractRegularFile source, AbstractRegularFile destination)
         {
-            if (source.LastWriteTime > destination.LastWriteTime)
+            if (!destination.Exists || source.LastWriteTime > destination.LastWriteTime)
             {
                 source.Copy(destination);
             }

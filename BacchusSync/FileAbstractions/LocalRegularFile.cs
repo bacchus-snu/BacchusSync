@@ -57,6 +57,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
         {
             try
             {
+                Log.DebugFormat("Removing {0}", Path);
                 File.Delete(Path);
             }
             catch (UnauthorizedAccessException e)

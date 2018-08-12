@@ -43,6 +43,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
         internal override void Remove()
         {
+            Log.DebugFormat("Removing {0}", Path);
             client.Delete(Path);
         }
     }
