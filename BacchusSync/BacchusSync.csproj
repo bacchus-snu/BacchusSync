@@ -65,6 +65,7 @@
     <Compile Include="ConfigurationForm.Designer.cs">
       <DependentUpon>ConfigurationForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Exceptions\HostKeyMismatchException.cs" />
     <Compile Include="FileAbstractions\Exceptions\AccessDeniedException.cs" />
     <Compile Include="FileAbstractions\Exceptions\CannotGetUserProfilePathException.cs" />
     <Compile Include="FileAbstractions\Exceptions\CopyTypeException.cs" />

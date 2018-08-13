@@ -6,7 +6,7 @@ namespace pGina.Plugin.BacchusSync
     {
         private const string KEY_SERVER_ADDRESS = "ServerAddress";
         private const string KEY_SERVER_PORT = "ServerPort";
-        private const string KEY_SERVER_FINGERPRINT = "ServerFingerprint";
+        private const string KEY_HOST_KEY = "HostKey";
         private const string KEY_SERVER_BASE_DIRECTORY = "ServerBaseDirectory";
 
         private static pGinaDynamicSettings settings = new pGinaDynamicSettings(PluginImpl.UUID);
@@ -15,7 +15,7 @@ namespace pGina.Plugin.BacchusSync
         {
             settings.SetDefault(KEY_SERVER_ADDRESS, "localhost");
             settings.SetDefault(KEY_SERVER_PORT, "22");
-            settings.SetDefault(KEY_SERVER_FINGERPRINT, "");
+            settings.SetDefault(KEY_HOST_KEY, "");
             settings.SetDefault(KEY_SERVER_BASE_DIRECTORY, "/srv/profiles");
         }
 
@@ -31,10 +31,10 @@ namespace pGina.Plugin.BacchusSync
             set => settings.SetSetting(KEY_SERVER_PORT, value.ToString());
         }
 
-        internal static string ServerFingerprint
+        internal static string HostKey
         {
-            get => settings.GetSetting(KEY_SERVER_FINGERPRINT).RawValue as string;
-            set => settings.SetSetting(KEY_SERVER_FINGERPRINT, value);
+            get => settings.GetSetting(KEY_HOST_KEY).RawValue as string;
+            set => settings.SetSetting(KEY_HOST_KEY, value);
         }
 
         internal static string ServerBaseDirectory

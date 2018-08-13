@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using pGina.Plugin.BacchusSync.FileAbstractions.Exceptions;
+using Renci.SshNet.Common;
+using System.Linq;
 
 namespace pGina.Plugin.BacchusSync
 {
@@ -24,6 +26,7 @@ namespace pGina.Plugin.BacchusSync
         internal SftpSynchronizer(string username, string password)
         {
             client = new SftpClient(Settings.ServerAddress, Settings.ServerPort, username, password);
+            client.HostKeyReceived += VerifyHostKey;
             client.Connect();
             this.username = username;
             serverBaseDirectory = Settings.ServerBaseDirectory;
@@ -34,6 +37,28 @@ namespace pGina.Plugin.BacchusSync
             uploadExclusionList = CreateUploadExclusionList(localProfilePath);
             localProfile = new LocalDirectory(localProfilePath, uploadExclusionList);
             remoteProfile = new RemoteDirectory(client, remoteProfilePath);
+        }
+
+        internal void VerifyHostKey(object sender, HostKeyEventArgs e)
+        {
+            string encodedHostKey = Settings.HostKey;
+            if (encodedHostKey == string.Empty)
+            {
+                e.CanTrust = true;
+            }
+            else
+            {
+                byte[] expectedHostKey = Convert.FromBase64String(encodedHostKey);
+                if (expectedHostKey.SequenceEqual(e.HostKey))
+                {
+                    e.CanTrust = true;
+                }
+                else
+                {
+                    e.CanTrust = false;
+                    throw new HostKeyMismatchException();
+                }
+            }
         }
 
         internal static string GetLocalProfilePath(string username, string password)
