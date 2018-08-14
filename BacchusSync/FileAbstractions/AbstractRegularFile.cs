@@ -6,9 +6,20 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 {
     internal abstract class AbstractRegularFile : AbstractFile
     {
+        internal abstract DateTime LastAccessTime
+        {
+            get;
+            set;
+        }
         internal abstract DateTime LastWriteTime
         {
             get;
+            set;
+        }
+        internal abstract FileAttributes WindowsAttributes
+        {
+            get;
+            set;
         }
 
         internal abstract Stream OpenRead();
@@ -19,7 +30,6 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
             var target = destination.GetFile(Name);
             Copy(target);
         }
-
 
         internal override void Copy(AbstractFile destination)
         {
@@ -44,6 +54,15 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
                     sourceStream.CopyTo(destinationStream);
                 }
             }
+
+            destinationRegularFile.SetAllAttributes(this);
+        }
+
+        internal virtual void SetAllAttributes(AbstractRegularFile original)
+        {
+            LastAccessTime = original.LastAccessTime;
+            LastWriteTime = original.LastWriteTime;
+            WindowsAttributes = original.WindowsAttributes;
         }
     }
 }

@@ -37,6 +37,11 @@ namespace pGina.Plugin.BacchusSync
             log.Warn(message);
         }
 
+        internal static void WarnFormat(string format, params object[] args)
+        {
+            log.WarnFormat(format, args);
+        }
+
         internal static void Error(object message)
         {
             log.Error(message);

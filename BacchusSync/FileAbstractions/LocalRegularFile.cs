@@ -11,11 +11,27 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
             Path = path;
         }
 
-        internal override DateTime LastWriteTime => File.GetLastWriteTime(Path);
+        internal override DateTime LastAccessTime
+        {
+            get => File.GetLastAccessTime(Path);
+            set => File.SetLastAccessTime(Path, value);
+        }
+
+        internal override DateTime LastWriteTime
+        {
+            get => File.GetLastWriteTime(Path);
+            set => File.SetLastWriteTime(Path, value);
+        }
 
         internal override string Name => System.IO.Path.GetFileName(Path);
 
         internal override bool Exists => File.Exists(Path);
+
+        internal override FileAttributes WindowsAttributes
+        {
+            get => File.GetAttributes(Path);
+            set => File.SetAttributes(Path, value);
+        }
 
         internal override void Create()
         {
