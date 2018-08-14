@@ -1,5 +1,5 @@
-﻿using pGina.Plugin.BacchusSync.FileAbstractions.Exceptions;
-using Renci.SshNet;
+﻿using pGina.Plugin.BacchusSync.FileAbstractions.Extra;
+using pGina.Plugin.BacchusSync.FileAbstractions.Exceptions;
 using System;
 using System.IO;
 using System.Linq;
@@ -8,43 +8,43 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 {
     internal class RemoteRegularFile : AbstractRegularFile
     {
-        private readonly SftpClient client;
+        private readonly RemoteContext remote;
 
-        internal RemoteRegularFile(SftpClient client, string path)
+        internal RemoteRegularFile(RemoteContext remote, string path)
         {
             if (path.Contains('\\'))
             {
                 throw new InvalidCharacterException("Remote path contains reverse slash.");
             }
-            this.client = client;
+            this.remote = remote;
             Path = path;
         }
 
-        internal override DateTime LastWriteTime => client.GetLastWriteTime(Path);
+        internal override DateTime LastWriteTime => remote.sftp.GetLastWriteTime(Path);
 
         internal override string Name => Path.Split('/').Last();
 
-        internal override bool Exists => client.Exists(Path);
+        internal override bool Exists => remote.sftp.Exists(Path);
 
         internal override void Create()
         {
-            client.Create(Path);
+            remote.sftp.Create(Path);
         }
 
         internal override Stream OpenRead()
         {
-            return client.OpenRead(Path);
+            return remote.sftp.OpenRead(Path);
         }
 
         internal override Stream OpenWrite()
         {
-            return client.OpenWrite(Path);
+            return remote.sftp.OpenWrite(Path);
         }
 
         internal override void Remove()
         {
             Log.DebugFormat("Removing {0}", Path);
-            client.Delete(Path);
+            remote.sftp.Delete(Path);
         }
     }
 }

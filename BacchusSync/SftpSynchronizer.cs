@@ -5,8 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using pGina.Plugin.BacchusSync.FileAbstractions.Exceptions;
-using Renci.SshNet.Common;
-using System.Linq;
+using pGina.Plugin.BacchusSync.FileAbstractions.Extra;
 
 namespace pGina.Plugin.BacchusSync
 {
@@ -16,7 +15,7 @@ namespace pGina.Plugin.BacchusSync
 
         private const string SYNC_INFORMATION_DIRECTORY = ".sync";
 
-        private readonly SftpClient client;
+        private readonly RemoteContext remote;
         private readonly string username;
         private readonly string serverBaseDirectory;
         private readonly string[] uploadExclusionList;
@@ -25,9 +24,18 @@ namespace pGina.Plugin.BacchusSync
 
         internal SftpSynchronizer(string username, string password)
         {
-            client = new SftpClient(Settings.ServerAddress, Settings.ServerPort, username, password);
-            client.HostKeyReceived += VerifyHostKey;
-            client.Connect();
+            ConnectionInfo connectionInfo = new ConnectionInfo(Settings.ServerAddress, Settings.ServerPort, username, new PasswordAuthenticationMethod(username, password));
+            if (Settings.HostKey == string.Empty)
+            {
+                remote = new RemoteContext(connectionInfo);
+            }
+            else
+            {
+                byte[] expectedHostKey = Convert.FromBase64String(Settings.HostKey);
+                remote = new RemoteContext(connectionInfo, expectedHostKey);
+            }
+            remote.Connect();
+
             this.username = username;
             serverBaseDirectory = Settings.ServerBaseDirectory;
 
@@ -36,29 +44,7 @@ namespace pGina.Plugin.BacchusSync
 
             uploadExclusionList = CreateUploadExclusionList(localProfilePath);
             localProfile = new LocalDirectory(localProfilePath, uploadExclusionList);
-            remoteProfile = new RemoteDirectory(client, remoteProfilePath);
-        }
-
-        internal void VerifyHostKey(object sender, HostKeyEventArgs e)
-        {
-            string encodedHostKey = Settings.HostKey;
-            if (encodedHostKey == string.Empty)
-            {
-                e.CanTrust = true;
-            }
-            else
-            {
-                byte[] expectedHostKey = Convert.FromBase64String(encodedHostKey);
-                if (expectedHostKey.SequenceEqual(e.HostKey))
-                {
-                    e.CanTrust = true;
-                }
-                else
-                {
-                    e.CanTrust = false;
-                    throw new HostKeyMismatchException();
-                }
-            }
+            remoteProfile = new RemoteDirectory(remote, remoteProfilePath);
         }
 
         internal static string GetLocalProfilePath(string username, string password)
@@ -122,15 +108,15 @@ namespace pGina.Plugin.BacchusSync
             string syncInformationDirectoryPath = string.Format("{0}/{1}", serverBaseDirectory, SYNC_INFORMATION_DIRECTORY);
             string syncInformationPath = string.Format("{0}/{1}/{2}", serverBaseDirectory, SYNC_INFORMATION_DIRECTORY, username);
 
-            if (!client.Exists(syncInformationDirectoryPath))
+            if (!remote.sftp.Exists(syncInformationDirectoryPath))
             {
-                client.CreateDirectory(syncInformationDirectoryPath);
-                client.ChangePermissions(syncInformationDirectoryPath, 01777);
+                remote.sftp.CreateDirectory(syncInformationDirectoryPath);
+                remote.sftp.ChangePermissions(syncInformationDirectoryPath, 01777);
             }
 
-            if (client.Exists(string.Format("{0}/{1}/{2}", serverBaseDirectory, SYNC_INFORMATION_DIRECTORY, username)))
+            if (remote.sftp.Exists(string.Format("{0}/{1}/{2}", serverBaseDirectory, SYNC_INFORMATION_DIRECTORY, username)))
             {
-                using (var stream = client.OpenRead(syncInformationPath))
+                using (var stream = remote.sftp.OpenRead(syncInformationPath))
                 {
                     return new SyncInformation(stream);
                 }
@@ -146,13 +132,13 @@ namespace pGina.Plugin.BacchusSync
             string syncInformationDirectoryPath = string.Format("{0}/{1}", serverBaseDirectory, SYNC_INFORMATION_DIRECTORY);
             string syncInformationPath = string.Format("{0}/{1}/{2}", serverBaseDirectory, SYNC_INFORMATION_DIRECTORY, username);
 
-            if (!client.Exists(syncInformationDirectoryPath))
+            if (!remote.sftp.Exists(syncInformationDirectoryPath))
             {
-                client.CreateDirectory(syncInformationDirectoryPath);
-                client.ChangePermissions(syncInformationDirectoryPath, 01777);
+                remote.sftp.CreateDirectory(syncInformationDirectoryPath);
+                remote.sftp.ChangePermissions(syncInformationDirectoryPath, 01777);
             }
 
-            using (var stream = client.OpenWrite(syncInformationPath))
+            using (var stream = remote.sftp.OpenWrite(syncInformationPath))
             {
                 var syncInformation = new SyncInformation(status, Environment.MachineName);
                 syncInformation.Save(stream);
@@ -250,7 +236,7 @@ namespace pGina.Plugin.BacchusSync
             {
                 if (disposing)
                 {
-                    client.Dispose();
+                    remote.Dispose();
                 }
 
                 disposedValue = true;

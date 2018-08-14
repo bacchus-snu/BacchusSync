@@ -66,6 +66,7 @@
       <DependentUpon>ConfigurationForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Exceptions\HostKeyMismatchException.cs" />
+    <Compile Include="FileAbstractions\Extra\RemoteContext.cs" />
     <Compile Include="FileAbstractions\Exceptions\AccessDeniedException.cs" />
     <Compile Include="FileAbstractions\Exceptions\CannotGetUserProfilePathException.cs" />
     <Compile Include="FileAbstractions\Exceptions\CopyTypeException.cs" />
@@ -85,7 +86,7 @@
     <Compile Include="Settings.cs" />
     <Compile Include="SftpSynchronizer.cs" />
     <Compile Include="SyncInformatiton.cs" />
-    <Compile Include="Utils.cs" />
+    <Compile Include="FileAbstractions\Extra\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
