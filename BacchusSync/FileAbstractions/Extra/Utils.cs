@@ -67,7 +67,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions.Extra
         {
             DateTime u = time.ToUniversalTime();
             string type = setAccessTime ? "-a" : "-m";
-            string commandText = string.Format("touch -c {0} -d \"{1}-{2}-{3} {4}:{5}:{6}.{7} +0000\" \"{8}\"", type, u.Year, u.Month, u.Day, u.Hour, u.Minute, u.Second, u.Millisecond, path);
+            string commandText = string.Format("touch -c {0} -d \"{1}-{2}-{3} {4}:{5}:{6}.{7} +0000\" \"{8}\"", type, u.Year, u.Month, u.Day, u.Hour, u.Minute, u.Second, u.Ticks % 10000000, path);
             var command = ssh.RunCommand(commandText);
             if (command.ExitStatus != 0)
             {
