@@ -1,4 +1,5 @@
 ﻿using pGina.Plugin.BacchusSync.FileAbstractions.Exceptions;
+using pGina.Plugin.BacchusSync.FileAbstractions.Extra;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,6 +21,23 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
         internal override bool Exists => Directory.Exists(Path);
 
+        internal override DateTime LastAccessTime
+        {
+            get => Directory.GetLastAccessTime(Path);
+            set => Directory.SetLastAccessTime(Path, value);
+        }
+
+        internal override DateTime LastWriteTime
+        {
+            get => Directory.GetLastWriteTime(Path);
+            set => Directory.SetLastWriteTime(Path, value);
+        }
+
+        internal override FileAttributes WindowsAttributes
+        {
+            get => File.GetAttributes(Path);
+            set => File.SetAttributes(Path, value);
+        }
 
         internal override void Create()
         {

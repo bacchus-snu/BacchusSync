@@ -4,6 +4,8 @@ using Renci.SshNet.Common;
 using Renci.SshNet.Sftp;
 using System.Collections.Generic;
 using System.Linq;
+using System;
+using System.IO;
 
 namespace pGina.Plugin.BacchusSync.FileAbstractions
 {
@@ -24,6 +26,24 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
         internal override string Name => Path.Split('/').Last();
 
         internal override bool Exists => remote.sftp.Exists(Path);
+
+        internal override DateTime LastAccessTime
+        {
+            get => remote.sftp.GetLastAccessTime(Path);
+            set => Utils.RemoteSetTime(remote.ssh, Path, true, value);
+        }
+
+        internal override DateTime LastWriteTime
+        {
+            get => remote.sftp.GetLastWriteTime(Path);
+            set => Utils.RemoteSetTime(remote.ssh, Path, false, value);
+        }
+
+        internal override FileAttributes WindowsAttributes
+        {
+            get => Utils.GetRemoteWindowsAttributes(remote.ssh, Path);
+            set => Utils.SetRemoteWindowsAttributes(remote.ssh, Path, value);
+        }
 
         internal override void Create()
         {

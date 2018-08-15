@@ -1,27 +1,10 @@
 ﻿using pGina.Plugin.BacchusSync.FileAbstractions.Exceptions;
-using System;
 using System.IO;
 
 namespace pGina.Plugin.BacchusSync.FileAbstractions
 {
     internal abstract class AbstractRegularFile : AbstractFile
     {
-        internal abstract DateTime LastAccessTime
-        {
-            get;
-            set;
-        }
-        internal abstract DateTime LastWriteTime
-        {
-            get;
-            set;
-        }
-        internal abstract FileAttributes WindowsAttributes
-        {
-            get;
-            set;
-        }
-
         internal abstract Stream OpenRead();
         internal abstract Stream OpenWrite();
 
@@ -56,13 +39,6 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
             }
 
             destinationRegularFile.SetAllAttributes(this);
-        }
-
-        internal virtual void SetAllAttributes(AbstractRegularFile original)
-        {
-            LastAccessTime = original.LastAccessTime;
-            LastWriteTime = original.LastWriteTime;
-            WindowsAttributes = original.WindowsAttributes;
         }
 
         /// <summary>

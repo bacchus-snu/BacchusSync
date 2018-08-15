@@ -41,10 +41,6 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
             set => File.SetLastWriteTime(Path, value);
         }
 
-        internal override string Name => System.IO.Path.GetFileName(Path);
-
-        internal override bool Exists => File.Exists(Path);
-
         internal override FileAttributes WindowsAttributes
         {
             get => File.GetAttributes(Path);
@@ -53,6 +49,10 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
                 File.SetAttributes(Path, value);
             }
         }
+
+        internal override string Name => System.IO.Path.GetFileName(Path);
+
+        internal override bool Exists => File.Exists(Path);
 
         internal override void Create()
         {

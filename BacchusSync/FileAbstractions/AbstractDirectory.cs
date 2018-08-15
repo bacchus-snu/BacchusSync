@@ -69,6 +69,8 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
                     }
                 }
             }
+
+            destinationDirectory.SetAllAttributes(this);
         }
     }
 }
