@@ -103,5 +103,10 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
                 throw new AccessDeniedException(Path, e);
             }
         }
+
+        internal override void Truncate()
+        {
+            File.Open(Path, FileMode.Truncate).Close();
+        }
     }
 }

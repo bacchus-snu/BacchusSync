@@ -43,7 +43,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
             if (destinationRegularFile.Exists)
             {
-                destinationRegularFile.Remove();
+                destinationRegularFile.Truncate();
             }
             destinationRegularFile.Create();
 
@@ -64,5 +64,10 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
             LastWriteTime = original.LastWriteTime;
             WindowsAttributes = original.WindowsAttributes;
         }
+
+        /// <summary>
+        /// Remove all contents in file and set file size to 0, without changing file attributes.
+        /// </summary>
+        internal abstract void Truncate();
     }
 }
