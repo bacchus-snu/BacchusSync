@@ -22,13 +22,13 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
         internal override DateTime LastAccessTime
         {
-            get => remote.sftp.GetLastAccessTime(Path);
+            get => Utils.RemoteGetTime(remote.ssh, Path, true);
             set => Utils.RemoteSetTime(remote.ssh, Path, true, value);
         }
 
         internal override DateTime LastWriteTime
         {
-            get => remote.sftp.GetLastWriteTime(Path);
+            get => Utils.RemoteGetTime(remote.ssh, Path, false);
             set => Utils.RemoteSetTime(remote.ssh, Path, false, value);
         }
 

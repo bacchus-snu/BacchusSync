@@ -37,6 +37,25 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions.Extra
             return fileSystemInfo.Attributes.HasFlag(FileAttributes.ReparsePoint);
         }
 
+        internal static DateTime RemoteGetTime(SshClient ssh, string path, bool getAccessTime)
+        {
+            string type = getAccessTime ? "%x" : "%y";
+            string commandText = string.Format("stat \"--printf={0}\" \"{1}\"", type, path);
+            var command = ssh.RunCommand(commandText);
+            if (command.ExitStatus != 0)
+            {
+                throw new RemoteCommandException(string.Format("Getting time failed.\nCommand : {0}\nExit code : {1}", commandText, command.ExitStatus));
+            }
+            else if (DateTime.TryParse(command.Result, out DateTime time))
+            {
+                return time;
+            }
+            else
+            {
+                throw new FormatException("Cannot parse time format from remote server.\nTime string : " + command.Result);
+            }
+        }
+
         /// <summary>
         /// Set atime or mtime.
         /// </summary>
