@@ -79,9 +79,17 @@ namespace pGina.Plugin.BacchusSync
 
         internal void UploadProfile()
         {
-            SaveSyncInformation(SyncInformation.SyncStatus.Uploading);
-            SyncDirectory(localProfile, remoteProfile);
-            SaveSyncInformation(SyncInformation.SyncStatus.LoggedOut);
+            var syncInformation = GetSyncInformation();
+            if (syncInformation.Status == SyncInformation.SyncStatus.LoggedOn && syncInformation.LastHost == Environment.MachineName)
+            {
+                SaveSyncInformation(SyncInformation.SyncStatus.Uploading);
+                SyncDirectory(localProfile, remoteProfile);
+                SaveSyncInformation(SyncInformation.SyncStatus.LoggedOut);
+            }
+            else
+            {
+                Log.Warn("Uploading canceled. User was not successfully logged on to this computer.");
+            }
         }
 
         internal void DownloadProfile()
@@ -91,12 +99,14 @@ namespace pGina.Plugin.BacchusSync
             switch(syncInformation.Status)
             {
                 case SyncInformation.SyncStatus.DoesNotExist:
-                    return;
+                    SaveSyncInformation(SyncInformation.SyncStatus.LoggedOn);
+                    break;
                 case SyncInformation.SyncStatus.LoggedOn:
                 case SyncInformation.SyncStatus.Uploading:
                     throw new UserNotLoggedOutException(syncInformation.LastHost);
                 case SyncInformation.SyncStatus.LoggedOut:
                     SyncDirectory(remoteProfile, localProfile);
+                    SaveSyncInformation(SyncInformation.SyncStatus.LoggedOn);
                     break;
                 default:
                     throw new Exception("Unhandled status : " + syncInformation.Status.ToString());
