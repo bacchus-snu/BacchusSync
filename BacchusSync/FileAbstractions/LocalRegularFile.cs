@@ -6,24 +6,6 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 {
     internal class LocalRegularFile : AbstractRegularFile
     {
-        internal bool IsReadOnly
-        {
-            get => File.GetAttributes(Path).HasFlag(FileAttributes.ReadOnly);
-            set
-            {
-                var attributes = File.GetAttributes(Path);
-                if (value)
-                {
-                    attributes = attributes | FileAttributes.ReadOnly;
-                }
-                else
-                {
-                    attributes = attributes & (~FileAttributes.ReadOnly);
-                }
-                File.SetAttributes(Path, attributes);
-            }
-        }
-
         internal LocalRegularFile(string path)
         {
             Path = path;
@@ -53,6 +35,24 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
         internal override string Name => System.IO.Path.GetFileName(Path);
 
         internal override bool Exists => File.Exists(Path);
+
+        internal override bool IsReadOnly
+        {
+            get => File.GetAttributes(Path).HasFlag(FileAttributes.ReadOnly);
+            set
+            {
+                var attributes = File.GetAttributes(Path);
+                if (value)
+                {
+                    attributes = attributes | FileAttributes.ReadOnly;
+                }
+                else
+                {
+                    attributes = attributes & (~FileAttributes.ReadOnly);
+                }
+                File.SetAttributes(Path, attributes);
+            }
+        }
 
         internal override void Create()
         {

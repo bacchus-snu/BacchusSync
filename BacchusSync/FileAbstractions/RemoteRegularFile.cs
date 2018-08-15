@@ -42,6 +42,12 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
         internal override bool Exists => remote.sftp.Exists(Path);
 
+        internal override bool IsReadOnly
+        {
+            get => !remote.sftp.GetAttributes(Path).OwnerCanWrite;
+            set => remote.sftp.GetAttributes(Path).OwnerCanWrite = !value;
+        }
+
         internal override void Create()
         {
             remote.sftp.Create(Path);

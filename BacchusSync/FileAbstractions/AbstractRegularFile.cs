@@ -5,6 +5,12 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 {
     internal abstract class AbstractRegularFile : AbstractFile
     {
+        internal abstract bool IsReadOnly
+        {
+            get;
+            set;
+        }
+
         internal abstract Stream OpenRead();
         internal abstract Stream OpenWrite();
 
@@ -26,9 +32,13 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
             if (destinationRegularFile.Exists)
             {
+                destinationRegularFile.IsReadOnly = false;
                 destinationRegularFile.Truncate();
             }
-            destinationRegularFile.Create();
+            else
+            {
+                destinationRegularFile.Create();
+            }
 
             using (var sourceStream = OpenRead())
             {
