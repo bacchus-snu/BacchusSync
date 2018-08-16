@@ -50,20 +50,34 @@ namespace pGina.Plugin.BacchusSync
         internal static string GetLocalProfilePath(string username, string password)
         {
             IntPtr hToken = Abstractions.WindowsApi.pInvokes.GetUserToken(username, null, password);
-            if (hToken != IntPtr.Zero)
+            try
             {
-                string path = Abstractions.WindowsApi.pInvokes.GetUserProfilePath(hToken);
-                if (string.IsNullOrEmpty(path))
+                if (hToken != IntPtr.Zero)
                 {
-                    path = Abstractions.WindowsApi.pInvokes.GetUserProfileDir(hToken);
-                }
-                Abstractions.WindowsApi.pInvokes.CloseHandle(hToken);
+                    string path = Abstractions.WindowsApi.pInvokes.GetUserProfilePath(hToken);
+                    if (string.IsNullOrEmpty(path))
+                    {
+                        path = Abstractions.WindowsApi.pInvokes.GetUserProfileDir(hToken);
+                    }
+                    if (string.IsNullOrEmpty(path))
+                    {
+                        path = Abstractions.WindowsApi.pInvokes.CreateUserProfileDir(hToken, username);
+                    }
+                    if (string.IsNullOrEmpty(path))
+                    {
+                        throw new CannotGetUserProfilePathException(username);
+                    }
 
-                return path;
+                    return path;
+                }
+                else
+                {
+                    throw new CannotGetUserProfilePathException(username);
+                }
             }
-            else
+            finally
             {
-                throw new CannotGetUserProfilePathException(username);
+                Abstractions.WindowsApi.pInvokes.CloseHandle(hToken);
             }
         }
 
