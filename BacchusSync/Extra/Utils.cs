@@ -5,6 +5,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Security.Principal;
+using System.Threading;
 
 namespace pGina.Plugin.BacchusSync.Extra
 {
@@ -159,6 +160,44 @@ namespace pGina.Plugin.BacchusSync.Extra
                         {
                             Log.Warn("Cannot close process token.");
                         }
+                    }
+                }
+            }
+        }
+
+        internal static void ResetUserRegistryPermission(string username, string profilePath)
+        {
+            GetSeRestoreNamePrivilege();
+
+            const int maxRetry = 3;
+            string registryFilePath = Path.Combine(profilePath, "NTUSER.DAT");
+
+            if (!Abstractions.WindowsApi.pInvokes.RegistryLoad(Abstractions.WindowsApi.pInvokes.structenums.RegistryLocation.HKEY_USERS, username, registryFilePath))
+            {
+                throw new ApiException("Registry hive loading failed.");
+            }
+            else if (!Abstractions.Windows.Security.RegSec(Abstractions.WindowsApi.pInvokes.structenums.RegistryLocation.HKEY_USERS, username, username))
+            {
+                throw new ApiException("Registry permission setting failed.");
+            }
+
+            int tryCount = 0;
+            while (true)
+            {
+                if (Abstractions.WindowsApi.pInvokes.RegistryUnLoad(Abstractions.WindowsApi.pInvokes.structenums.RegistryLocation.HKEY_USERS, username))
+                {
+                    break;
+                }
+                else
+                {
+                    tryCount++;
+                    if (tryCount >= maxRetry)
+                    {
+                        throw new ApiException("Registry hive unloading failed.");
+                    }
+                    else
+                    {
+                        Thread.Sleep(3000);
                     }
                 }
             }

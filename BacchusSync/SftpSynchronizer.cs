@@ -129,6 +129,7 @@ namespace pGina.Plugin.BacchusSync
                     SyncDirectory(remoteProfile, localProfile);
                     Extra.Utils.SetOwner(localProfile.Path, username);
                     DownloadAndApplyAcl(syncInformation.SidInLastHost, userSid);
+                    Extra.Utils.ResetUserRegistryPermission(username, localProfile.Path);
                     SaveSyncInformation(SyncInformation.SyncStatus.LoggedOn);
                     break;
                 default:
