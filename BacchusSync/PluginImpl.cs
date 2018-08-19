@@ -47,7 +47,7 @@ namespace pGina.Plugin.BacchusSync
 
                 if (!uploadProgressing)
                 {
-                    using (var synchronizer = new SftpSynchronizer(userInformation.Username, userInformation.Password))
+                    using (var synchronizer = new SftpSynchronizer(userInformation.Username, userInformation.Password, userInformation.SID.Value))
                     {
                         synchronizer.DownloadProfile();
                     }
@@ -75,7 +75,7 @@ namespace pGina.Plugin.BacchusSync
                         uploadTasks.Add(userInformation.Username.ToLower());
                     }
 
-                    using (var synchronizer = new SftpSynchronizer(userInformation.Username, userInformation.Password))
+                    using (var synchronizer = new SftpSynchronizer(userInformation.Username, userInformation.Password, userInformation.SID.Value))
                     {
                         synchronizer.UploadProfile();
                     }

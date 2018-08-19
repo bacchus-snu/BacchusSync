@@ -31,12 +31,14 @@ namespace pGina.Plugin.BacchusSync
 
         internal SyncStatus Status;
         internal string LastHost;
+        internal string SidInLastHost;
 
 
-        internal SyncInformation(SyncStatus status, string lastHost)
+        internal SyncInformation(SyncStatus status, string lastHost, string sidInLastHost)
         {
             Status = status;
             LastHost = lastHost;
+            SidInLastHost = sidInLastHost;
         }
 
         /// <summary>
@@ -60,6 +62,7 @@ namespace pGina.Plugin.BacchusSync
 
                 Status = (SyncStatus) int.Parse(reader.ReadLine());
                 LastHost = reader.ReadLine();
+                SidInLastHost = reader.ReadLine();
             }
         }
 
@@ -76,6 +79,7 @@ namespace pGina.Plugin.BacchusSync
                 writer.WriteLine(FILE_FORMAT_VERSION);
                 writer.WriteLine((int) Status);
                 writer.WriteLine(LastHost);
+                writer.WriteLine(SidInLastHost);
             }
         }
     }

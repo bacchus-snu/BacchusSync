@@ -6,6 +6,10 @@ using System.Collections.Generic;
 using System.IO;
 using pGina.Plugin.BacchusSync.FileAbstractions.Exceptions;
 using pGina.Plugin.BacchusSync.FileAbstractions.Extra;
+using System.IO.Compression;
+using System.Linq;
+using System.Text;
+using System.Security.Principal;
 
 namespace pGina.Plugin.BacchusSync
 {
@@ -17,12 +21,13 @@ namespace pGina.Plugin.BacchusSync
 
         private readonly RemoteContext remote;
         private readonly string username;
+        private readonly string userSid;
         private readonly string serverBaseDirectory;
         private readonly string[] uploadExclusionList;
         private readonly LocalDirectory localProfile;
         private readonly RemoteDirectory remoteProfile;
 
-        internal SftpSynchronizer(string username, string password)
+        internal SftpSynchronizer(string username, string password, string userSid)
         {
             ConnectionInfo connectionInfo = new ConnectionInfo(Settings.ServerAddress, Settings.ServerPort, username, new PasswordAuthenticationMethod(username, password));
             if (Settings.HostKey == string.Empty)
@@ -37,6 +42,7 @@ namespace pGina.Plugin.BacchusSync
             remote.Connect();
 
             this.username = username;
+            this.userSid = userSid;
             serverBaseDirectory = Settings.ServerBaseDirectory;
 
             string localProfilePath = GetLocalProfilePath(username, password);
@@ -98,6 +104,7 @@ namespace pGina.Plugin.BacchusSync
             {
                 SaveSyncInformation(SyncInformation.SyncStatus.Uploading);
                 SyncDirectory(localProfile, remoteProfile);
+                UploadAcl();
                 SaveSyncInformation(SyncInformation.SyncStatus.LoggedOut);
             }
             else
@@ -120,11 +127,77 @@ namespace pGina.Plugin.BacchusSync
                     throw new UserNotLoggedOutException(syncInformation.LastHost);
                 case SyncInformation.SyncStatus.LoggedOut:
                     SyncDirectory(remoteProfile, localProfile);
+                    Extra.Utils.SetOwner(localProfile.Path, username);
+                    DownloadAndApplyAcl(syncInformation.SidInLastHost, userSid);
                     SaveSyncInformation(SyncInformation.SyncStatus.LoggedOn);
                     break;
                 default:
                     throw new Exception("Unhandled status : " + syncInformation.Status.ToString());
             }
+        }
+
+        private void UploadAcl()
+        {
+            string remoteAclFilePath = string.Format("{0}/{1}/{2}.acl.gz", serverBaseDirectory, SYNC_INFORMATION_DIRECTORY, username);
+            string profileParentDirectory = Directory.GetParent(localProfile.Path).FullName;
+
+            using (StreamReader aclFileReader = new StreamReader(AclSynchronizer.Save(localProfile.Path), Encoding.Unicode))
+            {
+                using (StreamWriter remoteAclWriter = new StreamWriter(new GZipStream(remote.sftp.OpenWrite(remoteAclFilePath), CompressionMode.Compress), Encoding.UTF8))
+                {
+                    var remoteAclFileAttributes = remote.sftp.GetAttributes(remoteAclFilePath);
+                    remoteAclFileAttributes.SetPermissions(0600);
+                    remote.sftp.SetAttributes(remoteAclFilePath, remoteAclFileAttributes);
+
+                    while (!aclFileReader.EndOfStream)
+                    {
+                        string path = aclFileReader.ReadLine();
+
+                        try
+                        {
+                            if (!uploadExclusionList.Contains(Path.Combine(profileParentDirectory, path)))
+                            {
+                                remoteAclWriter.WriteLine(path);
+                                remoteAclWriter.WriteLine(aclFileReader.ReadLine());
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(string.Format("PPD : {0}, P : {1}\n{2}\n{3}", profileParentDirectory, path, e.Message, e.StackTrace));
+                            throw e;
+                        }
+                    }
+                }
+            }
+
+            AclSynchronizer.CleanUp();
+        }
+
+        private void DownloadAndApplyAcl(string oldSid, string newSid)
+        {
+            string remoteAclFilePath = string.Format("{0}/{1}/{2}.acl.gz", serverBaseDirectory, SYNC_INFORMATION_DIRECTORY, username);
+            string profileParentDirectory = Directory.GetParent(localProfile.Path).FullName;
+            string aclFilePath = Path.Combine(AclSynchronizer.TEMP_DIRECTORY, Path.GetFileName(localProfile.Path) + ".acl");
+
+            File.Create(aclFilePath).Close();
+            Extra.Utils.RestrictUserAccessToFile(aclFilePath);
+
+            using (StreamReader remoteAclReader = new StreamReader(new GZipStream(remote.sftp.OpenRead(remoteAclFilePath), CompressionMode.Decompress), Encoding.UTF8))
+            {
+                using (StreamWriter aclFileWriter = new StreamWriter(File.Open(aclFilePath, FileMode.Open, FileAccess.Write, FileShare.None), Encoding.Unicode))
+                {
+                    while (!remoteAclReader.EndOfStream)
+                    {
+                        aclFileWriter.WriteLine(remoteAclReader.ReadLine());
+                        string accessControl = remoteAclReader.ReadLine();
+                        accessControl = accessControl.Replace(oldSid, newSid);
+                        aclFileWriter.WriteLine(accessControl);
+                    }
+                }
+            }
+
+            AclSynchronizer.Restore(profileParentDirectory, aclFilePath);
+            File.Delete(aclFilePath);
         }
 
         internal SyncInformation GetSyncInformation()
@@ -147,7 +220,7 @@ namespace pGina.Plugin.BacchusSync
             }
             else
             {
-                return new SyncInformation(SyncInformation.SyncStatus.DoesNotExist, string.Empty);
+                return new SyncInformation(SyncInformation.SyncStatus.DoesNotExist, string.Empty, string.Empty);
             }
         }
 
@@ -164,7 +237,7 @@ namespace pGina.Plugin.BacchusSync
 
             using (var stream = remote.sftp.OpenWrite(syncInformationPath))
             {
-                var syncInformation = new SyncInformation(status, Environment.MachineName);
+                var syncInformation = new SyncInformation(status, Environment.MachineName, userSid);
                 syncInformation.Save(stream);
             }
         }

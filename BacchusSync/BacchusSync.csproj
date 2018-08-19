@@ -59,12 +59,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AclSynchronizer.cs" />
     <Compile Include="ConfigurationForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="ConfigurationForm.Designer.cs">
       <DependentUpon>ConfigurationForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Exceptions\ApiException.cs" />
     <Compile Include="Exceptions\HostKeyMismatchException.cs" />
     <Compile Include="FileAbstractions\Exceptions\RemoteCommandException.cs" />
     <Compile Include="FileAbstractions\Extra\RemoteContext.cs" />
@@ -88,6 +90,7 @@
     <Compile Include="SftpSynchronizer.cs" />
     <Compile Include="SyncInformatiton.cs" />
     <Compile Include="FileAbstractions\Extra\Utils.cs" />
+    <Compile Include="Extra\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
