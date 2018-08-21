@@ -91,7 +91,7 @@
     <Compile Include="SftpSynchronizer.cs" />
     <Compile Include="SyncInformatiton.cs" />
     <Compile Include="FileAbstractions\Extra\Utils.cs" />
-    <Compile Include="Extra\Utils.cs" />
+    <Compile Include="Extra\ApiUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

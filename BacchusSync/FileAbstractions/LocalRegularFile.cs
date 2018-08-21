@@ -1,4 +1,5 @@
-﻿using pGina.Plugin.BacchusSync.FileAbstractions.Exceptions;
+﻿using pGina.Plugin.BacchusSync.Extra;
+using pGina.Plugin.BacchusSync.FileAbstractions.Exceptions;
 using System;
 using System.IO;
 
@@ -6,9 +7,12 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 {
     internal class LocalRegularFile : AbstractRegularFile
     {
-        internal LocalRegularFile(string path)
+        private readonly string owner;
+
+        internal LocalRegularFile(string path, string owner)
         {
             Path = path;
+            this.owner = owner;
         }
 
         internal override DateTime LastAccessTime
@@ -59,6 +63,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
             try
             {
                 File.Create(Path).Close();
+                ApiUtils.SetOwner(Path, owner);
             }
             catch (UnauthorizedAccessException e)
             {

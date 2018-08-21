@@ -1,4 +1,5 @@
-﻿using pGina.Plugin.BacchusSync.FileAbstractions.Exceptions;
+﻿using pGina.Plugin.BacchusSync.Extra;
+using pGina.Plugin.BacchusSync.FileAbstractions.Exceptions;
 using pGina.Plugin.BacchusSync.FileAbstractions.Extra;
 using System;
 using System.Collections.Generic;
@@ -10,11 +11,13 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
     internal class LocalDirectory : AbstractDirectory
     {
         private readonly string[] exclusionList;
+        private readonly string owner;
 
-        internal LocalDirectory(string path, string[] exclusionList)
+        internal LocalDirectory(string path, string[] exclusionList, string owner)
         {
             Path = path;
             this.exclusionList = exclusionList;
+            this.owner = owner;
         }
 
         internal override string Name => System.IO.Path.GetFileName(Path);
@@ -42,6 +45,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
         internal override void Create()
         {
             Directory.CreateDirectory(Path);
+            ApiUtils.SetOwner(Path, owner);
         }
 
         internal override SortedSet<AbstractDirectory> GetDirectories()
@@ -56,7 +60,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
                     {
                         if (!(new DirectoryInfo(directoryPath)).IsReparsePoint())
                         {
-                            var directory = new LocalDirectory(directoryPath, exclusionList);
+                            var directory = new LocalDirectory(directoryPath, exclusionList, owner);
                             directories.Add(directory);
                         }
                     }
@@ -73,7 +77,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
         internal override AbstractFile GetFile(string fileName)
         {
             string targetPath = System.IO.Path.Combine(Path, fileName);
-            return new LocalRegularFile(targetPath);
+            return new LocalRegularFile(targetPath, owner);
         }
 
         internal override SortedSet<AbstractRegularFile> GetRegularFiles()
@@ -86,7 +90,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
                 {
                     if (!(new FileInfo(filePath)).IsReparsePoint())
                     {
-                        var file = new LocalRegularFile(filePath);
+                        var file = new LocalRegularFile(filePath, owner);
                         regularFiles.Add(file);
                     }
                 }
@@ -102,7 +106,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
         internal override AbstractDirectory GetSubDirectory(string directoryName)
         {
             string targetPath = System.IO.Path.Combine(Path, directoryName);
-            return new LocalDirectory(targetPath, exclusionList);
+            return new LocalDirectory(targetPath, exclusionList, owner);
         }
 
         internal override void Remove()

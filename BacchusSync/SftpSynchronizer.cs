@@ -50,7 +50,7 @@ namespace pGina.Plugin.BacchusSync
             string remoteProfilePath = string.Format("{0}/{1}", serverBaseDirectory, username);
 
             uploadExclusionList = CreateUploadExclusionList(localProfilePath);
-            localProfile = new LocalDirectory(localProfilePath, uploadExclusionList);
+            localProfile = new LocalDirectory(localProfilePath, uploadExclusionList, username);
             remoteProfile = new RemoteDirectory(remote, remoteProfilePath);
         }
 
