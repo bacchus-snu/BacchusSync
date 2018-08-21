@@ -2,9 +2,11 @@
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Security.Principal;
+using System.Text;
 using System.Threading;
 
 namespace pGina.Plugin.BacchusSync.Extra
@@ -47,6 +49,40 @@ namespace pGina.Plugin.BacchusSync.Extra
             internal UInt32 Attr;
         }
 
+        private enum TokenInformationClass : int
+        {
+            TokenUser = 1,
+            TokenGroups,
+            TokenPrivileges,
+            TokenOwner,
+            TokenPrimaryGroup,
+            TokenDefaultDacl,
+            TokenSource,
+            TokenType,
+            TokenImpersonationLevel,
+            TokenStatistics,
+            TokenRestrictedSids,
+            TokenSessionId,
+            TokenGroupsAndPrivileges,
+            TokenSessionReference,
+            TokenSandBoxInert,
+            TokenAuditPolicy,
+            TokenOrigin,
+            MaxTokenInfoClass
+        };
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct SidAndAttributes
+        {
+            internal IntPtr Sid;
+            internal int Attributes;
+        }
+
+        private struct TokenUser
+        {
+            internal SidAndAttributes User;
+        }
+
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern IntPtr GetCurrentProcess();
 
@@ -64,7 +100,14 @@ namespace pGina.Plugin.BacchusSync.Extra
 
         [DllImport("advapi32.dll", ExactSpelling = true, SetLastError = true)]
         private static extern bool AdjustTokenPrivileges(IntPtr tokenHandle, bool disableAllPrivileges, ref TokenPrivileges newState, int bufferLength, IntPtr previousState, IntPtr returnLength);
+
+        [DllImport("wtsapi32.dll", SetLastError = true)]
+        private static extern bool WTSQueryUserToken(int sessionId, out IntPtr token);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        private static extern bool GetTokenInformation(IntPtr tokenHandle, TokenInformationClass tokenInformationClass, IntPtr tokenInformation, int tokenInformationLength, out int returnLength);
         #endregion
+
         private static object restoreNameLock = new object();
         private static bool hasRestoreNamePrivilege = false;
 
@@ -200,6 +243,63 @@ namespace pGina.Plugin.BacchusSync.Extra
                         Thread.Sleep(3000);
                     }
                 }
+            }
+        }
+
+        internal static NTAccount GetUserFromSession(int sessionId)
+        {
+            IntPtr userToken = IntPtr.Zero;
+            IntPtr information = IntPtr.Zero;
+
+            try
+            {
+                if (!WTSQueryUserToken(sessionId, out userToken))
+                {
+                    throw new ApiException("WTSQueryUserToken failed: " + LastError());
+                }
+                GetTokenInformation(userToken, TokenInformationClass.TokenUser, IntPtr.Zero, 0, out int memoryRequired);
+
+                if (Marshal.GetLastWin32Error() != 122 /*ERROR_INSUFFICIENT_BUFFER*/)
+                {
+                    throw new ApiException("GetTokenInformation failed: " + LastError());
+                }
+
+                information = Marshal.AllocHGlobal(memoryRequired);
+                if (!GetTokenInformation(userToken, TokenInformationClass.TokenUser, information, memoryRequired, out memoryRequired))
+                {
+                    throw new ApiException("GetTokenInformation failed: " + LastError());
+                }
+
+                TokenUser tokenUser = (TokenUser)Marshal.PtrToStructure(information, typeof(TokenUser));
+
+                return (NTAccount) new SecurityIdentifier(tokenUser.User.Sid).Translate(typeof(NTAccount));
+            }
+            finally
+            {
+                if (information != IntPtr.Zero)
+                {
+                    Marshal.FreeHGlobal(information);
+                }
+                if (userToken != IntPtr.Zero)
+                {
+                    if (!CloseHandle(userToken))
+                    {
+                        Log.Warn("Cannot close process token.");
+                    }
+                }
+            }
+        }
+
+        internal static string GetUsername(this NTAccount account)
+        {
+            string fullName = account.Value;
+            if (fullName.Contains("\\"))
+            {
+                return fullName.Split('\\').Last();
+            }
+            else
+            {
+                return fullName;
             }
         }
     }

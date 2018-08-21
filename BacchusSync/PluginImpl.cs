@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.ServiceProcess;
 using log4net;
+using pGina.Plugin.BacchusSync.Extra;
 using pGina.Shared.Interfaces;
 using pGina.Shared.Types;
 
@@ -17,11 +18,11 @@ namespace pGina.Plugin.BacchusSync
         public string Version => Assembly.GetExecutingAssembly().GetName().Version.ToString();
         public Guid Uuid => UUID;
 
-        private readonly List<string> uploadTasks;
+        private readonly SessionTracker sessionTracker;
 
         public PluginImpl()
         {
-            uploadTasks = new List<string>();
+            sessionTracker = new SessionTracker();
             Log.Instantiate();
         }
 
@@ -36,22 +37,18 @@ namespace pGina.Plugin.BacchusSync
         public BooleanResult AuthenticatedUserGateway(SessionProperties properties)
         {
             var userInformation = properties.GetTrackedSingle<UserInformation>();
-            bool uploadProgressing = false;
 
             try
             {
-                lock (uploadTasks)
-                {
-                    uploadProgressing = uploadTasks.Contains(userInformation.Username.ToLower());
-                }
-
-                if (!uploadProgressing)
+                if (!sessionTracker.IsUploadingProfile(userInformation.Username))
                 {
                     using (var synchronizer = new SftpSynchronizer(userInformation.Username, userInformation.Password, userInformation.SID.Value))
                     {
                         synchronizer.DownloadProfile();
                     }
                 }
+
+                sessionTracker.UserGatewayPassed(userInformation.Username, userInformation.SID, userInformation.Password);
                 return new BooleanResult { Success = true };
             }
             catch (Exception e)
@@ -62,20 +59,25 @@ namespace pGina.Plugin.BacchusSync
             }
         }
 
-        public void SessionChange(int sessionID, SessionChangeReason evnt, SessionProperties properties)
+        public void SessionChange(int sessionId, SessionChangeReason evnt, SessionProperties properties)
         {
-            var userInformation = properties.GetTrackedSingle<UserInformation>();
-
-            if (evnt == SessionChangeReason.SessionUnlock)
+            if (evnt == SessionChangeReason.SessionLogon)
             {
+                string username = Utils.GetUserFromSession(sessionId).GetUsername();
+                sessionTracker.UserLoggedOn(username, sessionId);
+            }
+            else if (evnt == SessionChangeReason.SessionLogoff)
+            {
+                SessionTracker.Information information = sessionTracker.GetInformation(sessionId);
+                if (information == null)
+                {
+                    return;
+                }
+
                 try
                 {
-                    lock (uploadTasks)
-                    {
-                        uploadTasks.Add(userInformation.Username.ToLower());
-                    }
-
-                    using (var synchronizer = new SftpSynchronizer(userInformation.Username, userInformation.Password, userInformation.SID.Value))
+                    sessionTracker.StartedProfileUploading(information.Username);
+                    using (var synchronizer = new SftpSynchronizer(information.Username, information.Password, information.Sid.Value))
                     {
                         synchronizer.UploadProfile();
                     }
@@ -87,10 +89,7 @@ namespace pGina.Plugin.BacchusSync
                 }
                 finally
                 {
-                    lock (uploadTasks)
-                    {
-                        uploadTasks.Remove(userInformation.Username.ToLower());
-                    }
+                    sessionTracker.UserLoggedOff(information.Username, sessionId);
                 }
             }
         }
@@ -101,10 +100,7 @@ namespace pGina.Plugin.BacchusSync
         /// </summary>
         public bool LogoffRequestAddTime()
         {
-            lock (uploadTasks)
-            {
-                return uploadTasks.Count > 0;
-            }
+            return sessionTracker.ProfileUploadProgressing;
         }
 
         /// <summary>
@@ -114,10 +110,7 @@ namespace pGina.Plugin.BacchusSync
         /// </summary>
         public bool LoginUserRequest(string username)
         {
-            lock (uploadTasks)
-            {
-                return uploadTasks.Contains(username.ToLower());
-            }
+            return sessionTracker.IsUploadingProfile(username);
         }
 
         public void Configure()
