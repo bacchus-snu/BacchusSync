@@ -40,7 +40,7 @@ namespace pGina.Plugin.BacchusSync
                 var process = Process.Start(startInfo);
 
                 process.WaitForExit();
-                Utils.RestrictUserAccessToFile(tempAclFilePath);
+                ApiUtils.RestrictUserAccessToFile(tempAclFilePath);
 
                 lock (temporaryFiles)
                 {

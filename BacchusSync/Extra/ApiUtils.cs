@@ -6,12 +6,11 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Security.Principal;
-using System.Text;
 using System.Threading;
 
 namespace pGina.Plugin.BacchusSync.Extra
 {
-    internal static class Utils
+    internal static class ApiUtils
     {
         #region Windows API
         private struct TokenAccessRights
@@ -108,7 +107,7 @@ namespace pGina.Plugin.BacchusSync.Extra
         private static extern bool GetTokenInformation(IntPtr tokenHandle, TokenInformationClass tokenInformationClass, IntPtr tokenInformation, int tokenInformationLength, out int returnLength);
         #endregion
 
-        private static object restoreNameLock = new object();
+        private static readonly object restoreNameLock = new object();
         private static bool hasRestoreNamePrivilege = false;
 
         /// <summary>

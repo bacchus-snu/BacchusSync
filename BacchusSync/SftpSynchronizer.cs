@@ -10,6 +10,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Security.Principal;
+using pGina.Plugin.BacchusSync.Extra;
 
 namespace pGina.Plugin.BacchusSync
 {
@@ -127,9 +128,9 @@ namespace pGina.Plugin.BacchusSync
                     throw new UserNotLoggedOutException(syncInformation.LastHost);
                 case SyncInformation.SyncStatus.LoggedOut:
                     SyncDirectory(remoteProfile, localProfile);
-                    Extra.Utils.SetOwner(localProfile.Path, username);
+                    ApiUtils.SetOwner(localProfile.Path, username);
                     DownloadAndApplyAcl(syncInformation.SidInLastHost, userSid);
-                    Extra.Utils.ResetUserRegistryPermission(username, localProfile.Path);
+                    ApiUtils.ResetUserRegistryPermission(username, localProfile.Path);
                     SaveSyncInformation(SyncInformation.SyncStatus.LoggedOn);
                     break;
                 default:
@@ -181,7 +182,7 @@ namespace pGina.Plugin.BacchusSync
             string aclFilePath = Path.Combine(AclSynchronizer.TEMP_DIRECTORY, Path.GetFileName(localProfile.Path) + ".acl");
 
             File.Create(aclFilePath).Close();
-            Extra.Utils.RestrictUserAccessToFile(aclFilePath);
+            ApiUtils.RestrictUserAccessToFile(aclFilePath);
 
             using (StreamReader remoteAclReader = new StreamReader(new GZipStream(remote.sftp.OpenRead(remoteAclFilePath), CompressionMode.Decompress), Encoding.UTF8))
             {

@@ -63,7 +63,7 @@ namespace pGina.Plugin.BacchusSync
         {
             if (evnt == SessionChangeReason.SessionLogon)
             {
-                string username = Utils.GetUserFromSession(sessionId).GetUsername();
+                string username = ApiUtils.GetUserFromSession(sessionId).GetUsername();
                 sessionTracker.UserLoggedOn(username, sessionId);
             }
             else if (evnt == SessionChangeReason.SessionLogoff)
