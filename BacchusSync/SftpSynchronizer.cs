@@ -101,6 +101,10 @@ namespace pGina.Plugin.BacchusSync
         internal void UploadProfile()
         {
             var syncInformation = GetSyncInformation();
+
+            ApiUtils.GetSeBackupPrivilege();
+            ApiUtils.GetSeRestorePrivilege();
+
             if (syncInformation.Status == SyncInformation.SyncStatus.LoggedOn && syncInformation.LastHost == Environment.MachineName)
             {
                 SaveSyncInformation(SyncInformation.SyncStatus.Uploading);
@@ -116,9 +120,12 @@ namespace pGina.Plugin.BacchusSync
 
         internal void DownloadProfile()
         {
-            SyncInformation syncInformation = GetSyncInformation();
+            var syncInformation = GetSyncInformation();
 
-            switch(syncInformation.Status)
+            ApiUtils.GetSeBackupPrivilege();
+            ApiUtils.GetSeRestorePrivilege();
+
+            switch (syncInformation.Status)
             {
                 case SyncInformation.SyncStatus.DoesNotExist:
                     SaveSyncInformation(SyncInformation.SyncStatus.LoggedOn);

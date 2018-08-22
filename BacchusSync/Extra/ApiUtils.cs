@@ -107,8 +107,9 @@ namespace pGina.Plugin.BacchusSync.Extra
         private static extern bool GetTokenInformation(IntPtr tokenHandle, TokenInformationClass tokenInformationClass, IntPtr tokenInformation, int tokenInformationLength, out int returnLength);
         #endregion
 
-        private static readonly object restoreNameLock = new object();
-        private static bool hasRestoreNamePrivilege = false;
+        private static readonly object privilegeLock = new object();
+        private static bool hasRestorePrivilege = false;
+        private static bool hasBackupPrivilege = false;
 
         /// <summary>
         /// returns GetLastWin32Error as string
@@ -125,7 +126,7 @@ namespace pGina.Plugin.BacchusSync.Extra
         /// <param name="path">Path of the file.</param>
         internal static void RestrictUserAccessToFile(string path)
         {
-            GetSeRestoreNamePrivilege();
+            GetSeRestorePrivilege();
 
             var accessControl = File.GetAccessControl(path);
             accessControl.SetOwner(new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null));
@@ -139,7 +140,7 @@ namespace pGina.Plugin.BacchusSync.Extra
 
         internal static void SetOwner(string path, string username)
         {
-            GetSeRestoreNamePrivilege();
+            GetSeRestorePrivilege();
 
             if (Directory.Exists(path))
             {
@@ -157,51 +158,69 @@ namespace pGina.Plugin.BacchusSync.Extra
             }
         }
 
-        internal static void GetSeRestoreNamePrivilege()
+        internal static void GetSeRestorePrivilege()
         {
-            lock (restoreNameLock)
+            lock (privilegeLock)
             {
-                if (hasRestoreNamePrivilege)
+                if (hasRestorePrivilege)
                 {
                     return;
                 }
 
-                IntPtr processToken = IntPtr.Zero;
+                GetPrivilege(TokenAccessRights.SE_RESTORE_NAME);
+                hasRestorePrivilege = true;
+            }
+        }
 
-                try
+        internal static void GetSeBackupPrivilege()
+        {
+            lock (privilegeLock)
+            {
+                if (hasBackupPrivilege)
                 {
-                    if (!OpenProcessToken(GetCurrentProcess(), TokenAccessRights.TOKEN_ADJUST_PRIVILEGES | TokenAccessRights.TOKEN_QUERY, out processToken))
-                    {
-                        throw new ApiException("Open process token failed: " + LastError());
-                    }
-
-                    if (!LookupPrivilegeValue(null, TokenAccessRights.SE_RESTORE_NAME, out Luid restoreLuid))
-                    {
-                        throw new ApiException("LookupPrivilegeValue failed: " + LastError());
-                    }
-
-                    TokenPrivileges restorePrivilege = new TokenPrivileges
-                    {
-                        Attr = TokenAccessRights.SE_PRIVILEGE_ENABLED,
-                        Luid = restoreLuid,
-                        Count = 1,
-                    };
-
-                    if (!AdjustTokenPrivileges(processToken, false, ref restorePrivilege, 0, IntPtr.Zero, IntPtr.Zero))
-                    {
-                        throw new ApiException("AdjustTokenPrivilege failed: " + LastError());
-                    }
-
-                    hasRestoreNamePrivilege = true;
+                    return;
                 }
-                finally
+
+                GetPrivilege(TokenAccessRights.SE_BACKUP_NAME);
+                hasBackupPrivilege = true;
+            }
+        }
+
+        private static void GetPrivilege(string privilegeName)
+        {
+            IntPtr processToken = IntPtr.Zero;
+
+            try
+            {
+                if (!OpenProcessToken(GetCurrentProcess(), TokenAccessRights.TOKEN_ADJUST_PRIVILEGES | TokenAccessRights.TOKEN_QUERY, out processToken))
                 {
-                    if (processToken != IntPtr.Zero)
+                    throw new ApiException("Open process token failed: " + LastError());
+                }
+
+                if (!LookupPrivilegeValue(null, privilegeName, out Luid luid))
+                {
+                    throw new ApiException("LookupPrivilegeValue failed: " + LastError());
+                }
+
+                TokenPrivileges privilege = new TokenPrivileges
+                {
+                    Attr = TokenAccessRights.SE_PRIVILEGE_ENABLED,
+                    Luid = luid,
+                    Count = 1,
+                };
+
+                if (!AdjustTokenPrivileges(processToken, false, ref privilege, 0, IntPtr.Zero, IntPtr.Zero))
+                {
+                    throw new ApiException("AdjustTokenPrivilege failed: " + LastError());
+                }
+            }
+            finally
+            {
+                if (processToken != IntPtr.Zero)
+                {
+                    if (!CloseHandle(processToken))
                     {
-                        if (!CloseHandle(processToken))
-                        {
-                            Log.Warn("Cannot close process token.");
-                        }
+                        Log.Warn("Cannot close process token.");
                     }
                 }
             }
@@ -209,7 +228,7 @@ namespace pGina.Plugin.BacchusSync.Extra
 
         internal static void ResetUserRegistryPermission(string username, string profilePath)
         {
-            GetSeRestoreNamePrivilege();
+            GetSeRestorePrivilege();
 
             const int maxRetry = 3;
             string registryFilePath = Path.Combine(profilePath, "NTUSER.DAT");
