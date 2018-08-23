@@ -1,5 +1,6 @@
 ﻿using pGina.Plugin.BacchusSync.Extra;
 using pGina.Plugin.BacchusSync.FileAbstractions.Exceptions;
+using pGina.Plugin.BacchusSync.FileAbstractions.Streams;
 using System;
 using System.IO;
 
@@ -75,7 +76,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
         {
             try
             {
-                return File.OpenRead(Path);
+                return new PrivilegedFileStream(Path, FileAccess.Read, FileShare.Read, FileMode.Open);
             }
             catch (UnauthorizedAccessException e)
             {
@@ -87,7 +88,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
         {
             try
             {
-                return File.OpenWrite(Path);
+                return new PrivilegedFileStream(Path, FileAccess.Write, FileShare.None, FileMode.OpenOrCreate);
             }
             catch (UnauthorizedAccessException e)
             {
@@ -111,7 +112,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
         internal override void Truncate()
         {
-            File.Open(Path, FileMode.Truncate).Close();
+            new PrivilegedFileStream(Path, FileAccess.Write, FileShare.None, FileMode.Truncate).Close();
         }
     }
 }

@@ -21,6 +21,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <LangVersion>7.2</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -30,6 +31,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <LangVersion>7.2</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Abstractions, Version=3.9.9.12, Culture=neutral, processorArchitecture=MSIL">
@@ -83,6 +85,7 @@
     <Compile Include="Exceptions\SyncFileFormatException.cs" />
     <Compile Include="Exceptions\UserNotLoggedOutException.cs" />
     <Compile Include="FileAbstractions\RemoteRegularFile.cs" />
+    <Compile Include="FileAbstractions\Streams\PrivilegedFileStream.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="PluginImpl.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
