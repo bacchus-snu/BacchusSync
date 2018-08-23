@@ -11,6 +11,8 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions.Extra
 {
     internal static class Utils
     {
+        private static readonly char[] CHARACTERS_TO_TRIM = new char[] { ' ', '\n' };
+
         internal static IEnumerable<SftpFile> ListDirectoryAlmostAll(this SftpClient client, string path)
         {
             var rawList = client.ListDirectory(path);
@@ -82,7 +84,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions.Extra
             {
                 return (FileAttributes)int.Parse(command.Result);
             }
-            else if (command.Error.EndsWith("No such attribute"))
+            else if (command.Error.TrimEnd(CHARACTERS_TO_TRIM).EndsWith("No such attribute"))
             {
                 Log.WarnFormat("{0} doesn't have windows attributes.", path);
                 return FileAttributes.Normal;
