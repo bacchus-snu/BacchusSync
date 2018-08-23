@@ -36,9 +36,23 @@ namespace pGina.Plugin.BacchusSync
                 {
                     FileName = Path.Combine(Environment.SystemDirectory, "icacls.exe"),
                     Arguments = string.Format("\"{0}\" /save \"{1}\" /T /C /L /Q", path, tempAclFilePath),
+#if DEBUG
+                    UseShellExecute = false,
+                    RedirectStandardError = true,
+#endif
                 };
                 var process = Process.Start(startInfo);
-
+#if DEBUG
+                Log.DebugFormat("icacls executed with parameters: {0}", startInfo.Arguments);
+                using (var standardError = process.StandardError)
+                {
+                    string error = standardError.ReadToEnd();
+                    if (!string.IsNullOrWhiteSpace(error))
+                    {
+                        Log.WarnFormat("icacls error : \n{0}", standardError.ReadToEnd());
+                    }
+                }
+#endif
                 process.WaitForExit();
                 ApiUtils.RestrictUserAccessToFile(tempAclFilePath);
 
@@ -72,9 +86,23 @@ namespace pGina.Plugin.BacchusSync
             {
                 FileName = Path.Combine(Environment.SystemDirectory, "icacls.exe"),
                 Arguments = string.Format("\"{0}\" /restore \"{1}\" /C /L /Q", parentOfTarget, aclFile),
+#if DEBUG
+                UseShellExecute = false,
+                RedirectStandardError = true,
+#endif
             };
             var process = Process.Start(startInfo);
-
+#if DEBUG
+            Log.DebugFormat("icacls executed with parameters: {0}", startInfo.Arguments);
+            using (var standardError = process.StandardError)
+            {
+                string error = standardError.ReadToEnd();
+                if (!string.IsNullOrWhiteSpace(error))
+                {
+                    Log.WarnFormat("icacls error : \n{0}", standardError.ReadToEnd());
+                }
+            }
+#endif
             process.WaitForExit();
         }
 
