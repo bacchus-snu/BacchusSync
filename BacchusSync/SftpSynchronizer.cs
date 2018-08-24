@@ -161,25 +161,31 @@ namespace pGina.Plugin.BacchusSync
                     while (!aclFileReader.EndOfStream)
                     {
                         string path = aclFileReader.ReadLine();
+                        string accessControl = aclFileReader.ReadLine();
 
-                        try
+                        if (!IsInUploadExclusionList(Path.Combine(profileParentDirectory, path)))
                         {
-                            if (!uploadExclusionList.Contains(Path.Combine(profileParentDirectory, path)))
-                            {
-                                remoteAclWriter.WriteLine(path);
-                                remoteAclWriter.WriteLine(aclFileReader.ReadLine());
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            Log.Error(string.Format("PPD : {0}, P : {1}\n{2}\n{3}", profileParentDirectory, path, e.Message, e.StackTrace));
-                            throw e;
+                            remoteAclWriter.WriteLine(path);
+                            remoteAclWriter.WriteLine(accessControl);
                         }
                     }
                 }
             }
 
             AclSynchronizer.CleanUp();
+        }
+
+        private bool IsInUploadExclusionList(string path)
+        {
+            foreach (string excludedDirectory in uploadExclusionList)
+            {
+                if (path.StartsWith(excludedDirectory))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void DownloadAndApplyAcl(string oldSid, string newSid)
