@@ -70,10 +70,11 @@
     </Compile>
     <Compile Include="Exceptions\ApiException.cs" />
     <Compile Include="Exceptions\HostKeyMismatchException.cs" />
+    <Compile Include="Exceptions\ProfileOperationException.cs" />
     <Compile Include="FileAbstractions\Exceptions\RemoteCommandException.cs" />
     <Compile Include="FileAbstractions\Extra\RemoteContext.cs" />
     <Compile Include="FileAbstractions\Exceptions\AccessDeniedException.cs" />
-    <Compile Include="FileAbstractions\Exceptions\CannotGetUserProfilePathException.cs" />
+    <Compile Include="Exceptions\CannotGetUserProfilePathException.cs" />
     <Compile Include="FileAbstractions\Exceptions\CopyTypeException.cs" />
     <Compile Include="FileAbstractions\Exceptions\InvalidCharacterException.cs" />
     <Compile Include="FileAbstractions\AbstractDirectory.cs" />

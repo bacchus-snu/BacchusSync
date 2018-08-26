@@ -4,13 +4,12 @@ using Renci.SshNet;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using pGina.Plugin.BacchusSync.FileAbstractions.Exceptions;
 using pGina.Plugin.BacchusSync.FileAbstractions.Extra;
 using System.IO.Compression;
-using System.Linq;
 using System.Text;
 using System.Security.Principal;
 using pGina.Plugin.BacchusSync.Extra;
+using Microsoft.Win32;
 
 namespace pGina.Plugin.BacchusSync
 {
@@ -28,7 +27,7 @@ namespace pGina.Plugin.BacchusSync
         private readonly LocalDirectory localProfile;
         private readonly RemoteDirectory remoteProfile;
 
-        internal SftpSynchronizer(string username, string password, string userSid)
+        internal SftpSynchronizer(string username, string password, SecurityIdentifier userSid)
         {
             ConnectionInfo connectionInfo = new ConnectionInfo(Settings.ServerAddress, Settings.ServerPort, username, new PasswordAuthenticationMethod(username, password));
             if (Settings.HostKey == string.Empty)
@@ -43,10 +42,10 @@ namespace pGina.Plugin.BacchusSync
             remote.Connect();
 
             this.username = username;
-            this.userSid = userSid;
+            this.userSid = userSid.Value;
             serverBaseDirectory = Settings.ServerBaseDirectory;
 
-            string localProfilePath = GetLocalProfilePath(username, password);
+            string localProfilePath = GetLocalProfilePath(username, password, userSid);
             string remoteProfilePath = string.Format("{0}/{1}", serverBaseDirectory, username);
 
             uploadExclusionList = CreateUploadExclusionList(localProfilePath);
@@ -54,7 +53,7 @@ namespace pGina.Plugin.BacchusSync
             remoteProfile = new RemoteDirectory(remote, remoteProfilePath);
         }
 
-        internal static string GetLocalProfilePath(string username, string password)
+        internal static string GetLocalProfilePath(string username, string password, SecurityIdentifier sid)
         {
             IntPtr hToken = Abstractions.WindowsApi.pInvokes.GetUserToken(username, null, password);
             try
@@ -68,7 +67,7 @@ namespace pGina.Plugin.BacchusSync
                     }
                     if (string.IsNullOrEmpty(path))
                     {
-                        path = Abstractions.WindowsApi.pInvokes.CreateUserProfileDir(hToken, username);
+                        path = CreateUserProfile(username, sid);
                     }
                     if (string.IsNullOrEmpty(path))
                     {
@@ -85,6 +84,93 @@ namespace pGina.Plugin.BacchusSync
             finally
             {
                 Abstractions.WindowsApi.pInvokes.CloseHandle(hToken);
+            }
+        }
+
+        /// <summary>
+        /// Create user profile directory and set registry.
+        /// This method does not change owner nor grant access to user.
+        /// </summary>
+        /// <param name="username">Name of user to create profile directory.</param>
+        /// <param name="sid">SID of user.</param>
+        /// <returns>Path to created profile directory.</returns>
+        /// <exception cref="ProfileOperationException">If user already has profile directory, creating directory failed, or accessing registry failed.</exception>
+        internal static string CreateUserProfile(string username, SecurityIdentifier sid)
+        {
+            if (ProfileExists(sid))
+            {
+                throw new ProfileOperationException(string.Format("Cannot create profile. Profile for sid {0} exists.", sid.Value));
+            }
+
+            string profilesDirectory = GetProfilesDirectory();
+            string profilePath = null;
+
+            if (!Directory.Exists(Path.Combine(profilesDirectory, username)))
+            {
+                profilePath = Path.Combine(profilesDirectory, username);
+            }
+            else
+            {
+                for (int i = 0; i < 1000; i++)
+                {
+                    string pathToTest = Path.Combine(profilesDirectory, string.Format("{0}.{1:000}", username, i));
+                    if (!Directory.Exists(pathToTest))
+                    {
+                        profilePath = pathToTest;
+                        break;
+                    }
+                }
+
+                if (profilePath == null)
+                {
+                    throw new ProfileOperationException("Cannot create profile. Reached maximum profile name trial.");
+                }
+            }
+
+            Directory.CreateDirectory(profilePath);
+
+            using (RegistryKey registry = Registry.LocalMachine.CreateSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\" + sid.Value))
+            {
+                registry.SetValue("Flags", 0x0, RegistryValueKind.DWord);
+                registry.SetValue("FullProfile", 0x1, RegistryValueKind.DWord);
+                registry.SetValue("ProfileAttemptedProfileDownloadTimeHigh", 0x0, RegistryValueKind.DWord);
+                registry.SetValue("ProfileAttemptedProfileDownloadTimeLow", 0x0, RegistryValueKind.DWord);
+                registry.SetValue("ProfileImagePath", profilePath, RegistryValueKind.ExpandString);
+                registry.SetValue("ProfileLoadTimeHigh", 0x0, RegistryValueKind.DWord);
+                registry.SetValue("ProfileLoadTimeLow", 0x0, RegistryValueKind.DWord);
+                registry.SetValue("RunLogonScriptSync", 0x0, RegistryValueKind.DWord);
+
+                byte[] binarySid = new byte[sid.BinaryLength];
+                sid.GetBinaryForm(binarySid, 0);
+                registry.SetValue("Sid", binarySid, RegistryValueKind.Binary);
+
+                registry.SetValue("State", 0x0, RegistryValueKind.DWord);
+            }
+
+            return profilePath;
+        }
+
+        internal static bool ProfileExists(SecurityIdentifier sid)
+        {
+            using (RegistryKey registry = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\" + sid.Value))
+            {
+                return registry?.GetValue("ProfileImagePath", null) != null;
+            }
+        }
+
+        internal static string GetProfilesDirectory()
+        {
+            using (RegistryKey registry = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList"))
+            {
+                string profilesDirectory = (string)registry.GetValue("ProfilesDirectory");
+                if (profilesDirectory == null)
+                {
+                    throw new ProfileOperationException("Cannot get profiles directory from registry.");
+                }
+                else
+                {
+                    return Environment.ExpandEnvironmentVariables(profilesDirectory);
+                }
             }
         }
 

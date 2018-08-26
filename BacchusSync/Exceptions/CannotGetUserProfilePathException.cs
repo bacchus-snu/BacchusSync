@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace pGina.Plugin.BacchusSync.FileAbstractions.Exceptions
+namespace pGina.Plugin.BacchusSync.Exceptions
 {
     internal class CannotGetUserProfilePathException : Exception
     {

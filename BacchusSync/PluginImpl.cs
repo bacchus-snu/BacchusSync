@@ -42,7 +42,7 @@ namespace pGina.Plugin.BacchusSync
             {
                 if (!sessionTracker.IsUploadingProfile(userInformation.Username))
                 {
-                    using (var synchronizer = new SftpSynchronizer(userInformation.Username, userInformation.Password, userInformation.SID.Value))
+                    using (var synchronizer = new SftpSynchronizer(userInformation.Username, userInformation.Password, userInformation.SID))
                     {
                         synchronizer.DownloadProfile();
                     }
@@ -77,7 +77,7 @@ namespace pGina.Plugin.BacchusSync
                 try
                 {
                     sessionTracker.StartedProfileUploading(information.Username);
-                    using (var synchronizer = new SftpSynchronizer(information.Username, information.Password, information.Sid.Value))
+                    using (var synchronizer = new SftpSynchronizer(information.Username, information.Password, information.Sid))
                     {
                         synchronizer.UploadProfile();
                     }
