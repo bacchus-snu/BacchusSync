@@ -48,6 +48,9 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
         internal override void Create()
         {
             remote.sftp.CreateDirectory(Path);
+            var attributes = remote.sftp.GetAttributes(Path);
+            attributes.SetPermissions(0700);
+            remote.sftp.SetAttributes(Path, attributes);
         }
 
         internal override SortedSet<AbstractDirectory> GetDirectories()
