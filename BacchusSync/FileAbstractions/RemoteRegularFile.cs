@@ -61,7 +61,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
         internal override void Create()
         {
-            remote.sftp.Create(Path);
+            remote.sftp.Create(Path).Close();
             var attributes = remote.sftp.GetAttributes(Path);
             attributes.SetPermissions(0600);
             remote.sftp.SetAttributes(Path, attributes);
