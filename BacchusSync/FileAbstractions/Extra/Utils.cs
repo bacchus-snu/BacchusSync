@@ -43,7 +43,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions.Extra
         internal static DateTime RemoteGetTime(SshClient ssh, string path, bool getAccessTime)
         {
             string type = getAccessTime ? "%x" : "%y";
-            string commandText = string.Format("stat '--printf={0}' '{1}'", type, path);
+            string commandText = string.Format("stat '--printf={0}' $'{1}'", type, path);
             var command = ssh.RunCommand(commandText);
             if (command.ExitStatus != 0)
             {
@@ -70,7 +70,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions.Extra
         {
             DateTime u = time.ToUniversalTime();
             string type = setAccessTime ? "-a" : "-m";
-            string commandText = string.Format("touch -c {0} -d '{1}-{2}-{3} {4}:{5}:{6}.{7} +0000' '{8}'", type, u.Year, u.Month, u.Day, u.Hour, u.Minute, u.Second, u.Ticks % 10000000, path);
+            string commandText = string.Format("touch -c {0} -d '{1}-{2}-{3} {4}:{5}:{6}.{7} +0000' $'{8}'", type, u.Year, u.Month, u.Day, u.Hour, u.Minute, u.Second, u.Ticks % 10000000, path);
             var command = ssh.RunCommand(commandText);
             if (command.ExitStatus != 0)
             {
@@ -80,7 +80,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions.Extra
 
         internal static FileAttributes GetRemoteWindowsAttributes(SshClient ssh, string path)
         {
-            var command = ssh.RunCommand(string.Format("getfattr -n user.WinAttr --only-values '{0}'", path));
+            var command = ssh.RunCommand(string.Format("getfattr -n user.WinAttr --only-values $'{0}'", path));
             if (command.ExitStatus == 0)
             {
                 return (FileAttributes)int.Parse(command.Result);
@@ -98,7 +98,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions.Extra
 
         internal static void SetRemoteWindowsAttributes(SshClient ssh, string path, FileAttributes attributes)
         {
-            var command = ssh.RunCommand(string.Format("setfattr -n user.WinAttr -v '{0}' '{1}'", (int)attributes, path));
+            var command = ssh.RunCommand(string.Format("setfattr -n user.WinAttr -v '{0}' $'{1}'", (int)attributes, path));
             if (command.ExitStatus != 0)
             {
                 throw new RemoteCommandException(string.Format("setfattr failed with exit code {0} while processing {1}", command.ExitStatus, path));
@@ -107,7 +107,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions.Extra
 
         internal static T GetRemoteWindowsAccessControlList<T>(SshClient ssh, string path, string oldSid, string newSid) where T : FileSystemSecurity, new()
         {
-            var command = ssh.RunCommand(string.Format("getfattr -n user.WinACL --only-values '{0}'", path));
+            var command = ssh.RunCommand(string.Format("getfattr -n user.WinACL --only-values $'{0}'", path));
             if (command.ExitStatus == 0)
             {
                 T accessControlList = new T();
@@ -129,7 +129,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions.Extra
 
         internal static void SetRemoteWindowsAccessControlList(SshClient ssh, string path, FileSystemSecurity accessControlList)
         {
-            var command = ssh.RunCommand(string.Format("setfattr -n user.WinACL -v '{0}' '{1}'", accessControlList.GetSecurityDescriptorSddlForm(AccessControlSections.All), path));
+            var command = ssh.RunCommand(string.Format("setfattr -n user.WinACL -v '{0}' $'{1}'", accessControlList.GetSecurityDescriptorSddlForm(AccessControlSections.All), path));
             if (command.ExitStatus != 0)
             {
                 throw new RemoteCommandException(string.Format("setfattr failed with exit code {0} while processing {1}", command.ExitStatus, path));

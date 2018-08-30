@@ -25,28 +25,30 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
             this.newSid = newSid;
         }
 
+        internal string EscapedPath => Path.Replace("'", "\\'");
+
         internal override DateTime LastAccessTime
         {
-            get => Utils.RemoteGetTime(remote.ssh, Path, true);
-            set => Utils.RemoteSetTime(remote.ssh, Path, true, value);
+            get => Utils.RemoteGetTime(remote.ssh, EscapedPath, true);
+            set => Utils.RemoteSetTime(remote.ssh, EscapedPath, true, value);
         }
 
         internal override DateTime LastWriteTime
         {
-            get => Utils.RemoteGetTime(remote.ssh, Path, false);
-            set => Utils.RemoteSetTime(remote.ssh, Path, false, value);
+            get => Utils.RemoteGetTime(remote.ssh, EscapedPath, false);
+            set => Utils.RemoteSetTime(remote.ssh, EscapedPath, false, value);
         }
 
         internal override FileAttributes WindowsAttributes
         {
-            get => Utils.GetRemoteWindowsAttributes(remote.ssh, Path);
-            set => Utils.SetRemoteWindowsAttributes(remote.ssh, Path, value);
+            get => Utils.GetRemoteWindowsAttributes(remote.ssh, EscapedPath);
+            set => Utils.SetRemoteWindowsAttributes(remote.ssh, EscapedPath, value);
         }
 
         internal override FileSystemSecurity WindowsAccessControlList
         {
-            get => Utils.GetRemoteWindowsAccessControlList<FileSecurity>(remote.ssh, Path, oldSid, newSid);
-            set => Utils.SetRemoteWindowsAccessControlList(remote.ssh, Path, value);
+            get => Utils.GetRemoteWindowsAccessControlList<FileSecurity>(remote.ssh, EscapedPath, oldSid, newSid);
+            set => Utils.SetRemoteWindowsAccessControlList(remote.ssh, EscapedPath, value);
         }
 
         internal override string Name => Path.Split('/').Last();
@@ -85,7 +87,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
         internal override void Truncate()
         {
-            var command = remote.ssh.RunCommand(string.Format("truncate -c -s 0 '{0}'", Path));
+            var command = remote.ssh.RunCommand(string.Format("truncate -c -s 0 $'{0}'", EscapedPath));
             if (command.ExitStatus != 0)
             {
                 throw new RemoteCommandException(string.Format("truncate failed with exit code {0} while processing {1}", command.ExitStatus, Path));
