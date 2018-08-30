@@ -85,7 +85,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
 
         internal override void Truncate()
         {
-            var command = remote.ssh.RunCommand(string.Format("truncate -c -s 0 \"{0}\"", Path));
+            var command = remote.ssh.RunCommand(string.Format("truncate -c -s 0 '{0}'", Path));
             if (command.ExitStatus != 0)
             {
                 throw new RemoteCommandException(string.Format("truncate failed with exit code {0} while processing {1}", command.ExitStatus, Path));
