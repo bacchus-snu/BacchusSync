@@ -45,7 +45,8 @@ namespace pGina.Plugin.BacchusSync
             this.userSid = userSid.Value;
             serverBaseDirectory = Settings.ServerBaseDirectory;
 
-            string localProfilePath = GetLocalProfilePath(username, password, userSid);
+            bool remoteProfileExist = GetSyncInformation().Status != SyncInformation.SyncStatus.DoesNotExist;
+            string localProfilePath = GetLocalProfilePath(username, password, userSid, remoteProfileExist);
             string remoteProfilePath = string.Format("{0}/{1}", serverBaseDirectory, username);
 
             uploadExclusionList = CreateUploadExclusionList(localProfilePath);
@@ -53,7 +54,7 @@ namespace pGina.Plugin.BacchusSync
             remoteProfile = new RemoteDirectory(remote, remoteProfilePath);
         }
 
-        internal static string GetLocalProfilePath(string username, string password, SecurityIdentifier sid)
+        internal static string GetLocalProfilePath(string username, string password, SecurityIdentifier sid, bool remoteProfileExist)
         {
             IntPtr hToken = Abstractions.WindowsApi.pInvokes.GetUserToken(username, null, password);
             try
@@ -67,7 +68,14 @@ namespace pGina.Plugin.BacchusSync
                     }
                     if (string.IsNullOrEmpty(path))
                     {
-                        path = CreateUserProfile(username, sid);
+                        if (remoteProfileExist)
+                        {
+                            path = CreateUserProfile(username, sid);
+                        }
+                        else
+                        {
+                            path = Abstractions.WindowsApi.pInvokes.CreateUserProfileDir(hToken, username);
+                        }
                     }
                     if (string.IsNullOrEmpty(path))
                     {
