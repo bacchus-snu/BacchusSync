@@ -6,14 +6,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 using System.IO;
+using System.Security.AccessControl;
 
 namespace pGina.Plugin.BacchusSync.FileAbstractions
 {
     internal class RemoteDirectory : AbstractDirectory
     {
         private readonly RemoteContext remote;
+        private readonly string oldSid;
+        private readonly string newSid;
 
-        internal RemoteDirectory(RemoteContext remote, string path)
+        internal RemoteDirectory(RemoteContext remote, string path, string oldSid, string newSid)
         {
             if (path.Contains('\\'))
             {
@@ -21,6 +24,8 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
             }
             this.remote = remote;
             Path = path;
+            this.oldSid = oldSid;
+            this.newSid = newSid;
         }
 
         internal override string Name => Path.Split('/').Last();
@@ -45,6 +50,12 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
             set => Utils.SetRemoteWindowsAttributes(remote.ssh, Path, value);
         }
 
+        internal override FileSystemSecurity WindowsAccessControlList
+        {
+            get => Utils.GetRemoteWindowsAccessControlList<DirectorySecurity>(remote.ssh, Path, oldSid, newSid);
+            set => Utils.SetRemoteWindowsAccessControlList(remote.ssh, Path, value);
+        }
+
         internal override void Create()
         {
             remote.sftp.CreateDirectory(Path);
@@ -63,7 +74,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
                 {
                     if (file.IsDirectory)
                     {
-                        var directory = new RemoteDirectory(remote, file.FullName);
+                        var directory = new RemoteDirectory(remote, file.FullName, oldSid, newSid);
                         directories.Add(directory);
                     }
                 }
@@ -79,7 +90,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
         internal override AbstractFile GetFile(string fileName)
         {
             string targetPath = string.Format("{0}/{1}", Path, fileName);
-            var file = new RemoteRegularFile(remote, targetPath);
+            var file = new RemoteRegularFile(remote, targetPath, oldSid, newSid);
             return file;
         }
 
@@ -93,7 +104,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
                 {
                     if (file.IsRegularFile)
                     {
-                        var regularFile = new RemoteRegularFile(remote, file.FullName);
+                        var regularFile = new RemoteRegularFile(remote, file.FullName, oldSid, newSid);
                         files.Add(regularFile);
                     }
                 }
@@ -109,7 +120,7 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
         internal override AbstractDirectory GetSubDirectory(string directoryName)
         {
             string targetPath = string.Format("{0}/{1}", Path, directoryName);
-            var directory = new RemoteDirectory(remote, targetPath);
+            var directory = new RemoteDirectory(remote, targetPath, oldSid, newSid);
             return directory;
         }
 

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
 
 namespace pGina.Plugin.BacchusSync.FileAbstractions
 {
@@ -40,6 +41,12 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
         {
             get => File.GetAttributes(Path);
             set => File.SetAttributes(Path, value);
+        }
+
+        internal override FileSystemSecurity WindowsAccessControlList
+        {
+            get => Directory.GetAccessControl(Path);
+            set => Directory.SetAccessControl(Path, value as DirectorySecurity);
         }
 
         internal override void Create()

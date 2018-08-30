@@ -120,24 +120,6 @@ namespace pGina.Plugin.BacchusSync.Extra
             return new Win32Exception(Marshal.GetLastWin32Error()).Message;
         }
 
-        /// <summary>
-        /// Set file to be accessd by only NT AUTHORITY\SYSTEM and Adminisrators group.
-        /// </summary>
-        /// <param name="path">Path of the file.</param>
-        internal static void RestrictUserAccessToFile(string path)
-        {
-            GetSeRestorePrivilege();
-
-            var accessControl = File.GetAccessControl(path);
-            accessControl.SetOwner(new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null));
-            accessControl.SetAccessRuleProtection(true, false);
-            var allowSystem = new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null), FileSystemRights.FullControl, AccessControlType.Allow);
-            var allowAdminGroup = new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null), FileSystemRights.FullControl, AccessControlType.Allow);
-            accessControl.SetAccessRule(allowSystem);
-            accessControl.SetAccessRule(allowAdminGroup);
-            File.SetAccessControl(path, accessControl);
-        }
-
         internal static void SetOwner(string path, string username)
         {
             GetSeRestorePrivilege();

@@ -3,14 +3,17 @@ using pGina.Plugin.BacchusSync.FileAbstractions.Exceptions;
 using System;
 using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
 
 namespace pGina.Plugin.BacchusSync.FileAbstractions
 {
     internal class RemoteRegularFile : AbstractRegularFile
     {
         private readonly RemoteContext remote;
+        private readonly string oldSid;
+        private readonly string newSid;
 
-        internal RemoteRegularFile(RemoteContext remote, string path)
+        internal RemoteRegularFile(RemoteContext remote, string path, string oldSid, string newSid)
         {
             if (path.Contains('\\'))
             {
@@ -18,6 +21,8 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
             }
             this.remote = remote;
             Path = path;
+            this.oldSid = oldSid;
+            this.newSid = newSid;
         }
 
         internal override DateTime LastAccessTime
@@ -36,6 +41,12 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
         {
             get => Utils.GetRemoteWindowsAttributes(remote.ssh, Path);
             set => Utils.SetRemoteWindowsAttributes(remote.ssh, Path, value);
+        }
+
+        internal override FileSystemSecurity WindowsAccessControlList
+        {
+            get => Utils.GetRemoteWindowsAccessControlList<FileSecurity>(remote.ssh, Path, oldSid, newSid);
+            set => Utils.SetRemoteWindowsAccessControlList(remote.ssh, Path, value);
         }
 
         internal override string Name => Path.Split('/').Last();

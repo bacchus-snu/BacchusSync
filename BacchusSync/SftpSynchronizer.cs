@@ -45,13 +45,14 @@ namespace pGina.Plugin.BacchusSync
             this.userSid = userSid.Value;
             serverBaseDirectory = Settings.ServerBaseDirectory;
 
-            bool remoteProfileExist = GetSyncInformation().Status != SyncInformation.SyncStatus.DoesNotExist;
+            SyncInformation syncInformation = GetSyncInformation();
+            bool remoteProfileExist = syncInformation.Status != SyncInformation.SyncStatus.DoesNotExist;
             string localProfilePath = GetLocalProfilePath(username, password, userSid, remoteProfileExist);
             string remoteProfilePath = string.Format("{0}/{1}", serverBaseDirectory, username);
 
             uploadExclusionList = CreateUploadExclusionList(localProfilePath);
             localProfile = new LocalDirectory(localProfilePath, uploadExclusionList, username);
-            remoteProfile = new RemoteDirectory(remote, remoteProfilePath);
+            remoteProfile = new RemoteDirectory(remote, remoteProfilePath, syncInformation.SidInLastHost, this.userSid);
         }
 
         internal static string GetLocalProfilePath(string username, string password, SecurityIdentifier sid, bool remoteProfileExist)
@@ -203,7 +204,6 @@ namespace pGina.Plugin.BacchusSync
             {
                 SaveSyncInformation(SyncInformation.SyncStatus.Uploading);
                 SyncDirectory(localProfile, remoteProfile);
-                UploadAcl();
                 SaveSyncInformation(SyncInformation.SyncStatus.LoggedOut);
             }
             else
@@ -230,43 +230,12 @@ namespace pGina.Plugin.BacchusSync
                 case SyncInformation.SyncStatus.LoggedOut:
                     SyncDirectory(remoteProfile, localProfile);
                     ApiUtils.SetOwner(localProfile.Path, username);
-                    DownloadAndApplyAcl(syncInformation.SidInLastHost, userSid);
                     ApiUtils.ResetUserRegistryPermission(username, localProfile.Path);
                     SaveSyncInformation(SyncInformation.SyncStatus.LoggedOn);
                     break;
                 default:
                     throw new Exception("Unhandled status : " + syncInformation.Status.ToString());
             }
-        }
-
-        private void UploadAcl()
-        {
-            string remoteAclFilePath = string.Format("{0}/{1}/{2}.acl.gz", serverBaseDirectory, SYNC_INFORMATION_DIRECTORY, username);
-            string profileParentDirectory = Directory.GetParent(localProfile.Path).FullName;
-
-            using (StreamReader aclFileReader = new StreamReader(AclSynchronizer.Save(localProfile.Path), Encoding.Unicode))
-            {
-                using (StreamWriter remoteAclWriter = new StreamWriter(new GZipStream(remote.sftp.OpenWrite(remoteAclFilePath), CompressionMode.Compress), Encoding.UTF8))
-                {
-                    var remoteAclFileAttributes = remote.sftp.GetAttributes(remoteAclFilePath);
-                    remoteAclFileAttributes.SetPermissions(0600);
-                    remote.sftp.SetAttributes(remoteAclFilePath, remoteAclFileAttributes);
-
-                    while (!aclFileReader.EndOfStream)
-                    {
-                        string path = aclFileReader.ReadLine();
-                        string accessControl = aclFileReader.ReadLine();
-
-                        if (!IsInUploadExclusionList(Path.Combine(profileParentDirectory, path)))
-                        {
-                            remoteAclWriter.WriteLine(path);
-                            remoteAclWriter.WriteLine(accessControl);
-                        }
-                    }
-                }
-            }
-
-            AclSynchronizer.CleanUp();
         }
 
         private bool IsInUploadExclusionList(string path)
@@ -280,33 +249,6 @@ namespace pGina.Plugin.BacchusSync
             }
 
             return false;
-        }
-
-        private void DownloadAndApplyAcl(string oldSid, string newSid)
-        {
-            string remoteAclFilePath = string.Format("{0}/{1}/{2}.acl.gz", serverBaseDirectory, SYNC_INFORMATION_DIRECTORY, username);
-            string profileParentDirectory = Directory.GetParent(localProfile.Path).FullName;
-            string aclFilePath = Path.Combine(AclSynchronizer.TEMP_DIRECTORY, Path.GetFileName(localProfile.Path) + ".acl");
-
-            File.Create(aclFilePath).Close();
-            ApiUtils.RestrictUserAccessToFile(aclFilePath);
-
-            using (StreamReader remoteAclReader = new StreamReader(new GZipStream(remote.sftp.OpenRead(remoteAclFilePath), CompressionMode.Decompress), Encoding.UTF8))
-            {
-                using (StreamWriter aclFileWriter = new StreamWriter(File.Open(aclFilePath, FileMode.Open, FileAccess.Write, FileShare.None), Encoding.Unicode))
-                {
-                    while (!remoteAclReader.EndOfStream)
-                    {
-                        aclFileWriter.WriteLine(remoteAclReader.ReadLine());
-                        string accessControl = remoteAclReader.ReadLine();
-                        accessControl = accessControl.Replace(oldSid, newSid);
-                        aclFileWriter.WriteLine(accessControl);
-                    }
-                }
-            }
-
-            AclSynchronizer.Restore(profileParentDirectory, aclFilePath);
-            File.Delete(aclFilePath);
         }
 
         internal SyncInformation GetSyncInformation()

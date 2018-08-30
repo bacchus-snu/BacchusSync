@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
 using System.Text;
 
 namespace pGina.Plugin.BacchusSync.FileAbstractions.Extra
@@ -98,6 +99,37 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions.Extra
         internal static void SetRemoteWindowsAttributes(SshClient ssh, string path, FileAttributes attributes)
         {
             var command = ssh.RunCommand(string.Format("setfattr -n user.WinAttr -v \"{0}\" \"{1}\"", (int)attributes, path));
+            if (command.ExitStatus != 0)
+            {
+                throw new RemoteCommandException(string.Format("setfattr failed with exit code {0} while processing {1}", command.ExitStatus, path));
+            }
+        }
+
+        internal static T GetRemoteWindowsAccessControlList<T>(SshClient ssh, string path, string oldSid, string newSid) where T : FileSystemSecurity, new()
+        {
+            var command = ssh.RunCommand(string.Format("getfattr -n user.WinACL --only-values \"{0}\"", path));
+            if (command.ExitStatus == 0)
+            {
+                T accessControlList = new T();
+                accessControlList.SetSecurityDescriptorSddlForm(command.Result.Replace(oldSid, newSid));
+                return accessControlList;
+            }
+            else if (command.Error.TrimEnd(CHARACTERS_TO_TRIM).EndsWith("No such attribute"))
+            {
+                Log.WarnFormat("{0} doesn't have windows attributes.", path);
+                T accessControl = new T();
+                accessControl.SetAccessRuleProtection(false, true);
+                return accessControl;
+            }
+            else
+            {
+                throw new RemoteCommandException(string.Format("getfattr failed with exit code {0} while processing {1}", command.ExitStatus, path));
+            }
+        }
+
+        internal static void SetRemoteWindowsAccessControlList(SshClient ssh, string path, FileSystemSecurity accessControlList)
+        {
+            var command = ssh.RunCommand(string.Format("setfattr -n user.WinACL -v \"{0}\" \"{1}\"", accessControlList.GetSecurityDescriptorSddlForm(AccessControlSections.All), path));
             if (command.ExitStatus != 0)
             {
                 throw new RemoteCommandException(string.Format("setfattr failed with exit code {0} while processing {1}", command.ExitStatus, path));

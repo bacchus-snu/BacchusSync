@@ -3,6 +3,7 @@ using pGina.Plugin.BacchusSync.FileAbstractions.Exceptions;
 using pGina.Plugin.BacchusSync.FileAbstractions.Streams;
 using System;
 using System.IO;
+using System.Security.AccessControl;
 
 namespace pGina.Plugin.BacchusSync.FileAbstractions
 {
@@ -57,6 +58,12 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
                 }
                 File.SetAttributes(Path, attributes);
             }
+        }
+
+        internal override FileSystemSecurity WindowsAccessControlList
+        {
+            get => File.GetAccessControl(Path);
+            set => File.SetAccessControl(Path, value as FileSecurity);
         }
 
         internal override void Create()

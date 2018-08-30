@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Security.AccessControl;
 
 namespace pGina.Plugin.BacchusSync.FileAbstractions
 {
@@ -33,6 +34,11 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
             get;
             set;
         }
+        internal abstract FileSystemSecurity WindowsAccessControlList
+        {
+            get;
+            set;
+        }
 
         internal abstract void Remove();
         internal abstract void CopyTo(AbstractDirectory destination);
@@ -45,13 +51,14 @@ namespace pGina.Plugin.BacchusSync.FileAbstractions
         }
 
         /// <summary>
-        /// Apply original's atime, mtime, and Windows attributes to this file.
+        /// Apply original's atime, mtime, Windows attributes, and Windows access control list to this file.
         /// </summary>
         internal virtual void SetAllAttributes(AbstractFile original)
         {
             LastAccessTime = original.LastAccessTime;
             LastWriteTime = original.LastWriteTime;
             WindowsAttributes = original.WindowsAttributes;
+            WindowsAccessControlList = original.WindowsAccessControlList;
         }
     }
 }
