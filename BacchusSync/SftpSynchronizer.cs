@@ -306,6 +306,7 @@ namespace pGina.Plugin.BacchusSync
                 var regularFilesInDestination = destination.GetRegularFiles().GetEnumerator();
 
                 Sync(regularFilesInSource, regularFilesInDestination, destination, SyncRegularFile);
+                destination.SetAllAttributes(source);
             }
             else
             {
