@@ -18,6 +18,7 @@ namespace Updater
         private const string PLUGIN_FILE_NAME = "pGina.Plugin.BacchusSync.dll";
 
         private static string UpdateServerAddress;
+        private static string LogPath;
 
         static void Main(string[] args)
         {
@@ -28,13 +29,28 @@ namespace Updater
             }
 
             UpdateServerAddress = args[0];
+            LogPath = Path.Combine(args[1], "..", "log", "Updater_log.txt");
 
-            if (GetLastUpdateTime() < GetUpdateReleaseTime())
+            try
             {
-                StopServiceAndWait();
-                UpdateDll(args[1]);
+                if (GetLastUpdateTime() < GetUpdateReleaseTime())
+                {
+                    StopServiceAndWait();
+                    UpdateDll(args[1]);
+                    SetLastUpdateTime(DateTime.Now);
+                }
+            }
+            catch (Exception e)
+            {
+                using (var log = new StreamWriter(File.OpenWrite(LogPath)))
+                {
+                    log.WriteLine(e.ToString());
+                    log.WriteLine(e.StackTrace);
+                }
+            }
+            finally
+            {
                 StartService();
-                SetLastUpdateTime(DateTime.Now);
             }
         }
 
@@ -108,7 +124,11 @@ namespace Updater
         {
             using (var service = new ServiceController(PGINA_SERVICE_NAME))
             {
-                service.Start();
+                if (service.Status != ServiceControllerStatus.Running)
+                {
+                    service.Start();
+                    service.WaitForStatus(ServiceControllerStatus.Running);
+                }
             }
         }
     }
