@@ -226,7 +226,15 @@ namespace pGina.Plugin.BacchusSync
                     break;
                 case SyncInformation.SyncStatus.LoggedOn:
                 case SyncInformation.SyncStatus.Uploading:
-                    throw new UserNotLoggedOutException(syncInformation.LastHost);
+                    if (syncInformation.LastHost == Environment.MachineName && ProfileExists(new SecurityIdentifier(syncInformation.SidInLastHost)))
+                    {
+                        SaveSyncInformation(SyncInformation.SyncStatus.LoggedOn);
+                        break;
+                    }
+                    else
+                    {
+                        throw new UserNotLoggedOutException(syncInformation.LastHost);
+                    }
                 case SyncInformation.SyncStatus.LoggedOut:
                     SyncDirectory(remoteProfile, localProfile);
                     ApiUtils.SetOwner(localProfile.Path, username);
