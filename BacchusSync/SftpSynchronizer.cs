@@ -229,6 +229,8 @@ namespace pGina.Plugin.BacchusSync
                     if (syncInformation.LastHost == Environment.MachineName && ProfileExists(new SecurityIdentifier(syncInformation.SidInLastHost)))
                     {
                         SaveSyncInformation(SyncInformation.SyncStatus.LoggedOn);
+                        ApiUtils.SetOwner(localProfile.Path, username);
+                        ApiUtils.ResetUserRegistryPermission(username, localProfile.Path);
                         break;
                     }
                     else
