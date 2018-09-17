@@ -1,4 +1,5 @@
-﻿using pGina.Plugin.BacchusSync.Exceptions;
+﻿using Microsoft.Win32;
+using pGina.Plugin.BacchusSync.Exceptions;
 using System;
 using System.ComponentModel;
 using System.IO;
@@ -214,12 +215,13 @@ namespace pGina.Plugin.BacchusSync.Extra
 
             const int maxRetry = 3;
             string registryFilePath = Path.Combine(profilePath, "NTUSER.DAT");
+            SecurityIdentifier userSid = new NTAccount(username).Translate(typeof(SecurityIdentifier)) as SecurityIdentifier;
 
             if (!Abstractions.WindowsApi.pInvokes.RegistryLoad(Abstractions.WindowsApi.pInvokes.structenums.RegistryLocation.HKEY_USERS, username, registryFilePath))
             {
                 throw new ApiException("Registry hive loading failed.");
             }
-            else if (!Abstractions.Windows.Security.RegSec(Abstractions.WindowsApi.pInvokes.structenums.RegistryLocation.HKEY_USERS, username, username))
+            else if (!ApiUtils.RegSec(Abstractions.WindowsApi.pInvokes.structenums.RegistryLocation.HKEY_USERS, username, userSid))
             {
                 throw new ApiException("Registry permission setting failed.");
             }
@@ -301,6 +303,51 @@ namespace pGina.Plugin.BacchusSync.Extra
             {
                 return fullName;
             }
+        }
+
+        /// <summary>
+        /// apply registry security settings to user profiles
+        /// </summary>
+        public static bool RegSec(Abstractions.WindowsApi.pInvokes.structenums.RegistryLocation where, string keyname, SecurityIdentifier userSid)
+        {
+            try
+            {
+                using (RegistryKey key = Abstractions.WindowsApi.pInvokes.GetRegistryLocation(where).OpenSubKey(keyname, true))
+                {
+                    RegistrySecurity keySecurity = key.GetAccessControl(AccessControlSections.Access);
+                    string sddl = keySecurity.GetSecurityDescriptorSddlForm(AccessControlSections.All);
+
+                    foreach (RegistryAccessRule user in keySecurity.GetAccessRules(true, true, typeof(SecurityIdentifier)))
+                    {
+                        if (user.IdentityReference.Value.StartsWith("S-1-5-21-") && !user.IdentityReference.Value.Equals(userSid.Value))
+                        {
+                            sddl = sddl.Replace(user.IdentityReference.Value, userSid.Value);
+                            keySecurity.SetSecurityDescriptorSddlForm(sddl);
+                            key.SetAccessControl(keySecurity);
+
+                            break;
+                        }
+                    }
+                    foreach (string subkey in key.GetSubKeyNames())
+                    {
+                        if (!RegSec(where, keyname + "\\" + subkey, userSid))
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+            catch (SystemException ex)
+            {
+                Log.WarnFormat("RegSec:{0} Warning {1}", keyname, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Log.ErrorFormat("RegSec:{0} Error:{1}", keyname, ex.Message);
+                return false;
+            }
+
+            return true;
         }
     }
 }
