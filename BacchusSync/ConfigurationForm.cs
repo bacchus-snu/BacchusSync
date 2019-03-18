@@ -21,11 +21,12 @@ namespace pGina.Plugin.BacchusSync
             serverPortText.Text = Settings.ServerPort.ToString();
             hostKeyText.Text = Settings.HostKey;
             serverBaseDirectoryText.Text = Settings.ServerBaseDirectory;
+            authServerAddressText.Text = Settings.AuthenticationServerAddress;
         }
 
         private void OnClickOkButton(object sender, EventArgs e)
         {
-            if (!ushort.TryParse(serverPortText.Text, out ushort port))
+            if (!ushort.TryParse(serverPortText.Text, out ushort serverPort))
             {
                 MessageBox.Show("Invalid server port", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -44,9 +45,10 @@ namespace pGina.Plugin.BacchusSync
             }
 
             Settings.ServerAddress = serverAddressText.Text;
-            Settings.ServerPort = port;
+            Settings.ServerPort = serverPort;
             Settings.HostKey = hostKeyText.Text;
             Settings.ServerBaseDirectory = serverBaseDirectoryText.Text;
+            Settings.AuthenticationServerAddress = authServerAddressText.Text;
             Close();
         }
 

@@ -8,6 +8,7 @@ namespace pGina.Plugin.BacchusSync
         private const string KEY_SERVER_PORT = "ServerPort";
         private const string KEY_HOST_KEY = "HostKey";
         private const string KEY_SERVER_BASE_DIRECTORY = "ServerBaseDirectory";
+        private const string KEY_AUTHENTICATION_SERVER_ADDRESS = "AuthenticationServerAddress";
 
         private static pGinaDynamicSettings settings = new pGinaDynamicSettings(PluginImpl.UUID);
 
@@ -17,6 +18,7 @@ namespace pGina.Plugin.BacchusSync
             settings.SetDefault(KEY_SERVER_PORT, "22");
             settings.SetDefault(KEY_HOST_KEY, "");
             settings.SetDefault(KEY_SERVER_BASE_DIRECTORY, "/srv/profiles");
+            settings.SetDefault(KEY_AUTHENTICATION_SERVER_ADDRESS, "https://localhost");
         }
 
         internal static string ServerAddress
@@ -41,6 +43,12 @@ namespace pGina.Plugin.BacchusSync
         {
             get => settings.GetSetting(KEY_SERVER_BASE_DIRECTORY).RawValue as string;
             set => settings.SetSetting(KEY_SERVER_BASE_DIRECTORY, value);
+        }
+
+        internal static string AuthenticationServerAddress
+        {
+            get => settings.GetSetting(KEY_AUTHENTICATION_SERVER_ADDRESS).RawValue as string;
+            set => settings.SetSetting(KEY_AUTHENTICATION_SERVER_ADDRESS, value);
         }
     }
 }
