@@ -121,11 +121,19 @@ namespace pGina.Plugin.BacchusSync
 
         public BooleanResult AuthenticateUser(SessionProperties properties)
         {
-            var userInfo = properties.GetTrackedSingle<UserInformation>();
+            try
+            {
+                var userInfo = properties.GetTrackedSingle<UserInformation>();
+                bool result = ApiAuthentication.Authenticate(userInfo.Username, userInfo.Password);
 
-            bool result = ApiAuthentication.Authenticate(userInfo.Username, userInfo.Password);
-
-            return new BooleanResult { Success = result };
+                return new BooleanResult { Success = result };
+            }
+            catch (Exception e)
+            {
+                Log.Error(e.Message);
+                Log.Error(e.StackTrace);
+                return new BooleanResult { Success = false, Message = e.Message };
+            }
         }
     }
 }

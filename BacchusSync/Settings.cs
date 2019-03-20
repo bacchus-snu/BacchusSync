@@ -14,11 +14,11 @@ namespace pGina.Plugin.BacchusSync
 
         static Settings()
         {
-            settings.SetDefault(KEY_PROFILE_SERVER_ADDRESS, "localhost");
+            settings.SetDefault(KEY_PROFILE_SERVER_ADDRESS, "profile.bacchus.snucse.org");
             settings.SetDefault(KEY_PROFILE_SERVER_PORT, "22");
             settings.SetDefault(KEY_HOST_KEY, "");
             settings.SetDefault(KEY_PROFILE_SERVER_BASE_DIRECTORY, "/srv/profiles");
-            settings.SetDefault(KEY_AUTHENTICATION_SERVER_ADDRESS, "https://localhost");
+            settings.SetDefault(KEY_AUTHENTICATION_SERVER_ADDRESS, "https://id.snucse.org/api/login/pam");
         }
 
         internal static string ProfileServerAddress
