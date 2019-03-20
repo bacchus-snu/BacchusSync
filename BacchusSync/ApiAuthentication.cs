@@ -1,6 +1,5 @@
 using System.Text;
 using System.Net;
-using Newtonsoft.Json.Linq;
 
 namespace pGina.Plugin.BacchusSync
 {
@@ -10,19 +9,23 @@ namespace pGina.Plugin.BacchusSync
         {
             var request = WebRequest.Create(Settings.AuthenticationServerAddress);
 
-            JObject payload = new JObject();
-            payload.Add("username", username);
-            payload.Add("password", password);
-            var payloadBytes = Encoding.UTF8.GetBytes(payload.ToString().ToCharArray());
+            string filteredUsername = username.Replace("\\", "\\\\").Replace("\"", "\\\"");
+            string filteredPassword = password.Replace("\\", "\\\\").Replace("\"", "\\\"");
+
+            string payload = string.Format("{{\"username\": \"{0}\", \"password\": \"{1}\"}}", filteredUsername, filteredPassword);
+
+            var payloadBytes = Encoding.UTF8.GetBytes(payload.ToCharArray());
 
             request.Credentials = CredentialCache.DefaultCredentials;
             request.Method = "POST";
             request.ContentLength = payloadBytes.Length;
+            request.ContentType = "application/json";
 
-            var stream = request.GetRequestStream();
-
-            stream.Write(payloadBytes, 0, payloadBytes.Length);
-            stream.Close();
+            using (var stream = request.GetRequestStream())
+            {
+                stream.Write(payloadBytes, 0, payloadBytes.Length);
+                stream.Close();
+            }
 
             WebResponse response = request.GetResponse();
 

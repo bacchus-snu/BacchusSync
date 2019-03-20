@@ -32,10 +32,10 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.serverAddressText = new System.Windows.Forms.TextBox();
-            this.serverPortText = new System.Windows.Forms.TextBox();
+            this.profileServerAddressText = new System.Windows.Forms.TextBox();
+            this.profileServerPortText = new System.Windows.Forms.TextBox();
             this.hostKeyText = new System.Windows.Forms.TextBox();
-            this.serverBaseDirectoryText = new System.Windows.Forms.TextBox();
+            this.profileServerBaseDirectoryText = new System.Windows.Forms.TextBox();
             this.okButton = new System.Windows.Forms.Button();
             this.cancelButton = new System.Windows.Forms.Button();
             this.label5 = new System.Windows.Forms.Label();
@@ -74,27 +74,27 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(14, 156);
+            this.label4.Location = new System.Drawing.Point(12, 118);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(147, 15);
             this.label4.TabIndex = 3;
             this.label4.Text = "Server base directory";
             // 
-            // serverAddressText
+            // profileServerAddressText
             // 
-            this.serverAddressText.Location = new System.Drawing.Point(165, 15);
-            this.serverAddressText.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.serverAddressText.Name = "serverAddressText";
-            this.serverAddressText.Size = new System.Drawing.Size(293, 25);
-            this.serverAddressText.TabIndex = 4;
+            this.profileServerAddressText.Location = new System.Drawing.Point(165, 15);
+            this.profileServerAddressText.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.profileServerAddressText.Name = "profileServerAddressText";
+            this.profileServerAddressText.Size = new System.Drawing.Size(293, 25);
+            this.profileServerAddressText.TabIndex = 4;
             // 
-            // serverPortText
+            // profileServerPortText
             // 
-            this.serverPortText.Location = new System.Drawing.Point(165, 49);
-            this.serverPortText.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.serverPortText.Name = "serverPortText";
-            this.serverPortText.Size = new System.Drawing.Size(293, 25);
-            this.serverPortText.TabIndex = 5;
+            this.profileServerPortText.Location = new System.Drawing.Point(165, 49);
+            this.profileServerPortText.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.profileServerPortText.Name = "profileServerPortText";
+            this.profileServerPortText.Size = new System.Drawing.Size(293, 25);
+            this.profileServerPortText.TabIndex = 5;
             // 
             // hostKeyText
             // 
@@ -104,13 +104,13 @@
             this.hostKeyText.Size = new System.Drawing.Size(293, 25);
             this.hostKeyText.TabIndex = 6;
             // 
-            // serverBaseDirectoryText
+            // profileServerBaseDirectoryText
             // 
-            this.serverBaseDirectoryText.Location = new System.Drawing.Point(165, 152);
-            this.serverBaseDirectoryText.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.serverBaseDirectoryText.Name = "serverBaseDirectoryText";
-            this.serverBaseDirectoryText.Size = new System.Drawing.Size(293, 25);
-            this.serverBaseDirectoryText.TabIndex = 7;
+            this.profileServerBaseDirectoryText.Location = new System.Drawing.Point(165, 115);
+            this.profileServerBaseDirectoryText.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.profileServerBaseDirectoryText.Name = "profileServerBaseDirectoryText";
+            this.profileServerBaseDirectoryText.Size = new System.Drawing.Size(293, 25);
+            this.profileServerBaseDirectoryText.TabIndex = 7;
             // 
             // okButton
             // 
@@ -138,7 +138,7 @@
             // 
             this.label5.AutoSize = true;
             this.label5.Enabled = false;
-            this.label5.Location = new System.Drawing.Point(97, 122);
+            this.label5.Location = new System.Drawing.Point(91, 155);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(264, 15);
             this.label5.TabIndex = 10;
@@ -146,7 +146,7 @@
             // 
             // getHostKeyButton
             // 
-            this.getHostKeyButton.Location = new System.Drawing.Point(359, 116);
+            this.getHostKeyButton.Location = new System.Drawing.Point(361, 148);
             this.getHostKeyButton.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.getHostKeyButton.Name = "getHostKeyButton";
             this.getHostKeyButton.Size = new System.Drawing.Size(99, 29);
@@ -182,10 +182,10 @@
             this.Controls.Add(this.label5);
             this.Controls.Add(this.cancelButton);
             this.Controls.Add(this.okButton);
-            this.Controls.Add(this.serverBaseDirectoryText);
+            this.Controls.Add(this.profileServerBaseDirectoryText);
             this.Controls.Add(this.hostKeyText);
-            this.Controls.Add(this.serverPortText);
-            this.Controls.Add(this.serverAddressText);
+            this.Controls.Add(this.profileServerPortText);
+            this.Controls.Add(this.profileServerAddressText);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
@@ -204,10 +204,10 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.TextBox serverAddressText;
-        private System.Windows.Forms.TextBox serverPortText;
+        private System.Windows.Forms.TextBox profileServerAddressText;
+        private System.Windows.Forms.TextBox profileServerPortText;
         private System.Windows.Forms.TextBox hostKeyText;
-        private System.Windows.Forms.TextBox serverBaseDirectoryText;
+        private System.Windows.Forms.TextBox profileServerBaseDirectoryText;
         private System.Windows.Forms.Button okButton;
         private System.Windows.Forms.Button cancelButton;
         private System.Windows.Forms.Label label5;
