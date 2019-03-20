@@ -17,15 +17,16 @@ namespace pGina.Plugin.BacchusSync
         {
             InitializeComponent();
 
-            serverAddressText.Text = Settings.ServerAddress;
-            serverPortText.Text = Settings.ServerPort.ToString();
+            profileServerAddressText.Text = Settings.ProfileServerAddress;
+            profileServerPortText.Text = Settings.ProfileServerPort.ToString();
             hostKeyText.Text = Settings.HostKey;
-            serverBaseDirectoryText.Text = Settings.ServerBaseDirectory;
+            profileServerBaseDirectoryText.Text = Settings.ProfileServerBaseDirectory;
+            authServerAddressText.Text = Settings.AuthenticationServerAddress;
         }
 
         private void OnClickOkButton(object sender, EventArgs e)
         {
-            if (!ushort.TryParse(serverPortText.Text, out ushort port))
+            if (!ushort.TryParse(profileServerPortText.Text, out ushort profileServerPort))
             {
                 MessageBox.Show("Invalid server port", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -43,10 +44,11 @@ namespace pGina.Plugin.BacchusSync
                 }
             }
 
-            Settings.ServerAddress = serverAddressText.Text;
-            Settings.ServerPort = port;
+            Settings.ProfileServerAddress = profileServerAddressText.Text;
+            Settings.ProfileServerPort = profileServerPort;
             Settings.HostKey = hostKeyText.Text;
-            Settings.ServerBaseDirectory = serverBaseDirectoryText.Text;
+            Settings.ProfileServerBaseDirectory = profileServerBaseDirectoryText.Text;
+            Settings.AuthenticationServerAddress = authServerAddressText.Text;
             Close();
         }
 
@@ -59,14 +61,14 @@ namespace pGina.Plugin.BacchusSync
         {
             try
             {
-                string serverAddress = serverAddressText.Text;
+                string serverAddress = profileServerAddressText.Text;
 
                 if (serverAddress == string.Empty)
                 {
                     MessageBox.Show("Server address is empty.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
-                if (!ushort.TryParse(serverPortText.Text, out ushort port))
+                if (!ushort.TryParse(profileServerPortText.Text, out ushort port))
                 {
                     MessageBox.Show("Invalid port.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;

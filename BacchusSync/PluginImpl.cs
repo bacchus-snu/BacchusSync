@@ -9,7 +9,7 @@ using pGina.Shared.Types;
 
 namespace pGina.Plugin.BacchusSync
 {
-    public class PluginImpl : IPluginAuthenticationGateway, IPluginEventNotifications, IPluginLogoffRequestAddTime, IPluginConfiguration
+    public class PluginImpl : IPluginAuthenticationGateway, IPluginEventNotifications, IPluginLogoffRequestAddTime, IPluginConfiguration, IPluginAuthentication
     {
         internal static readonly Guid UUID = new Guid("a56d528b-c55e-4553-8a73-4a7aa2e3850c");
 
@@ -117,6 +117,23 @@ namespace pGina.Plugin.BacchusSync
         {
             var configurationForm = new ConfigurationForm();
             configurationForm.ShowDialog();
+        }
+
+        public BooleanResult AuthenticateUser(SessionProperties properties)
+        {
+            try
+            {
+                var userInfo = properties.GetTrackedSingle<UserInformation>();
+                bool result = ApiAuthentication.Authenticate(userInfo.Username, userInfo.Password);
+
+                return new BooleanResult { Success = result };
+            }
+            catch (Exception e)
+            {
+                Log.Error(e.Message);
+                Log.Error(e.StackTrace);
+                return new BooleanResult { Success = false, Message = e.Message };
+            }
         }
     }
 }

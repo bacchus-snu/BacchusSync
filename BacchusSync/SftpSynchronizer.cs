@@ -29,7 +29,7 @@ namespace pGina.Plugin.BacchusSync
 
         internal SftpSynchronizer(string username, string password, SecurityIdentifier userSid)
         {
-            ConnectionInfo connectionInfo = new ConnectionInfo(Settings.ServerAddress, Settings.ServerPort, username, new PasswordAuthenticationMethod(username, password));
+            ConnectionInfo connectionInfo = new ConnectionInfo(Settings.ProfileServerAddress, Settings.ProfileServerPort, username, new PasswordAuthenticationMethod(username, password));
             if (Settings.HostKey == string.Empty)
             {
                 remote = new RemoteContext(connectionInfo);
@@ -43,7 +43,7 @@ namespace pGina.Plugin.BacchusSync
 
             this.username = username;
             this.userSid = userSid.Value;
-            serverBaseDirectory = Settings.ServerBaseDirectory;
+            serverBaseDirectory = Settings.ProfileServerBaseDirectory;
 
             SyncInformation syncInformation = GetSyncInformation();
             bool remoteProfileExist = syncInformation.Status != SyncInformation.SyncStatus.DoesNotExist;
